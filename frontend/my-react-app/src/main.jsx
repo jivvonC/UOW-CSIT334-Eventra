@@ -20,6 +20,10 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 import ProviderProfile from "./pages/ProviderProfile";
 import { AuthProvider } from "./context/AuthContext";
+import PaymentPage from "./pages/PaymentPage";
+import CustomerPage from "./pages/admin/CustomerPage";
+import AdminHomePage from "./pages/admin/AdminHomePage";
+import ServiceProviderPage from "./pages/admin/ServiceProviderPage";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -48,7 +52,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="forgotpw" element={<ForgotPw />} />
             <Route path="/providerprofile/:id" element={<ProviderProfile />} />
             <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="payment" element={<PaymentPage />} />
           </Route>
+
+          {/* Admin Pages Here */}
+          <Route path="/admin" element={<AdminHomePage />} />
+          <Route path="/admin/customers" element={<CustomerPage />} />
+          <Route path="/admin/service-providers" element={<ServiceProviderPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

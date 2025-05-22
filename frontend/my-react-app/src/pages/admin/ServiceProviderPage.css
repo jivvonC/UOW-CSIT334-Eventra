@@ -1,0 +1,118 @@
+.tableTitle {
+  margin-bottom: 1rem;
+  color: #ADEA16;
+  font-weight: bold;
+  font-size: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.button {
+  background-color: #ADEA16 !important;
+  border: none !important;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+}
+
+.button:hover {
+  background-color: #8FCB13 !important;
+  cursor: pointer;
+  color: black !important;
+}
+
+.deleteButton {
+  background-color: #fd3030 !important;
+  border: none !important;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #da0f0f !important;
+  cursor: pointer;
+  color: white !important;
+}
+
+.servicesButton {
+  background-color: #04c234 !important;
+  border: none !important;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+  color: white;
+}
+
+.servicesButton:hover {
+  background-color: #05992a !important;
+  cursor: pointer;
+  color: white !important;
+}
+
+.searchBar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.service-provider-table .ant-table-thead > tr > th {
+  background-color: #ADEA16;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  font-size: large;
+}
+
+.ant-table-thead > tr > th,
+.ant-table-tbody > tr > td {
+  font-size: medium;
+}
+
+.service-provider-table .ant-table-column-has-sorters:hover {
+  background-color: #8FCB13 !important;
+  color: black;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.custom-table .ant-table-container {
+  border: 2px solid #ADEA16 !important;
+  border-radius: 8px;
+}
+
+.service-provider-table .ant-table-tbody > tr:nth-child(odd) {
+  background-color: #e2e2e2;
+}
+
+.service-provider-table .ant-table-tbody > tr:nth-child(even) {
+  background-color: white;
+}
+
+.service-provider-table .ant-table-tbody > tr:hover > td {
+  background-color: inherit !important;
+}
+
+.providerName, .providerPhone, .providerEmail {
+  font-size: 18px;
+}
+
+.providerEmail {
+  text-decoration: underline;
+  color: rgb(30, 141, 233);
+}
+
+.modalHeading {
+    font-size: 26px;
+}
+
+.modalButton {
+  background-color: #fd3030 !important;
+  border: none !important;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+  color: white;
+}
+
+.modalButton:hover {
+  background-color: #da0f0f !important;
+  cursor: pointer;
+  color: white !important;
+}
