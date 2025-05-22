@@ -1,0 +1,96 @@
+.pageBackgroundColor {
+    min-height: 100vh; /*Cover the whole page*/
+    padding-top: 60px; 
+}
+
+.container {
+    max-width: 1500px; /* or whatever width you want */
+    margin: 0 auto;     /* centers the content horizontally */
+    box-sizing: border-box;
+}
+
+.categoriesBar {
+    position: relative;
+    overflow-x: hidden;
+    background-color: white;
+    margin: 0 0 1rem 0;
+    padding: 0 30px;
+}
+
+.resultTitle {
+    margin-bottom: 2rem;
+    font-size: 26px;
+}
+
+.gallery {
+    display: flex;
+    gap: 20px;
+    min-width: 100%;
+}
+
+.galleryItemTopRow,
+.galleryItemBottomRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.galleryItemTitle, .galleryItemRate,
+.galleryItemRatings, .galleryItemLocation {
+  margin: 0;
+}
+
+.galleryItem {
+    scroll-snap-align: start;
+    flex: 0 0 calc(20% - 16px); /* Show 5 items: 20% minus gap compensation */
+    box-sizing: border-box;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: white;
+    transition: transform 0.2s ease;
+}
+
+.galleryItem:hover {
+  transform: scale(1.02);
+}
+
+.galleryItemCoverPhoto {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+}
+
+.galleryItemContent {
+    padding: 0 15px;
+}
+  
+.galleryItemTitle {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.galleryItemRatings {
+    font-size: 14px;
+    color: #555;
+}
+
+.galleryItemRatingsIcon {
+  width: 16px;
+  height: 16px;
+  margin-left: 5px;
+  margin-top: -5px;
+  vertical-align: middle;
+}
+
+.galleryItemRate {
+    font-weight: bold;
+    color: green;
+}
+
+.galleryItemLocation {
+    font-size: 13px;
+    color: #888;
+}
