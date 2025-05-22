@@ -64,7 +64,7 @@ const Login = () => {
 
             <div className="signup">
               <button
-                type="submit"
+                type="button"
                 className="signupbtn"
                 onClick={navigateToSignUpSelect}
               >

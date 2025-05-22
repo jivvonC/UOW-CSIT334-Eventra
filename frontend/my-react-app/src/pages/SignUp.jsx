@@ -9,7 +9,11 @@ import { toast } from "react-toastify";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const navigateToLogin = () => {
+  const navigateToLogin1 = () => {
+    navigate("/login");
+  };
+
+  const navigateToLogin2 = () => {
     navigate("/login");
     toast.success(`Sign up complete! ${username}`);
   };
@@ -48,7 +52,7 @@ const SignUp = () => {
               <button
                 type="submit"
                 className="signupbtn"
-                onClick={navigateToLogin}
+                onClick={navigateToLogin1}
               >
                 Log in
               </button>
@@ -108,7 +112,7 @@ const SignUp = () => {
                 type="submit"
                 className="loginbtn"
                 disabled={isValid ? false : true}
-                onClick={() => navigateToLogin()}
+                onClick={() => navigateToLogin2()}
               >
                 Sign up
               </button>
