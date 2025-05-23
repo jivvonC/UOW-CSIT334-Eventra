@@ -624,6 +624,7 @@ const ProviderProfile = () => {
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState(null);
+  const navigate = useNavigate();
 
   if (!service) {
     return <div className="pageBackgroundColor">Service not found.</div>;
