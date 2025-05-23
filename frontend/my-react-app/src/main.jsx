@@ -23,6 +23,7 @@ import PaymentPage from "./pages/PaymentPage";
 import CustomerPage from "./pages/admin/CustomerPage";
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import ServiceProviderPage from "./pages/admin/ServiceProviderPage";
+import PaymentUser from "./pages/PaymentUser";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -51,6 +52,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/providerprofile/:id" element={<ProviderProfile />} />
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="payment" element={<PaymentPage />} />
+            <Route path="paymentuser" element={<PaymentUser />} />
           </Route>
 
           {/* Admin Pages Here */}
