@@ -11,22 +11,46 @@ const SignUp = () => {
   const navigate = useNavigate();
 
   const [userData, setUserData] = useState({
-    firstname: "",
-    lastname: "",
+    firstName: "",
+    lastName: "",
     email: "",
-    passwd: "",
-    passwdCheck: "",
+    password: "",
+    phoneNumber: "",
+    role: "CUSTOMER"
   });
 
   const navigateToLogin1 = () => {
     navigate("/login");
   };
 
-  const navigateToLogin2 = () => {
+  const navigateToLogin2 = async () => {
+  const payload = {
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    email: userData.email,
+    password: userData.password,
+    phoneNumber: userData.phoneNumber,
+    role: userData.role
+  };
+
+  try {
+  const response = await fetch("http://localhost:9090/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to register");
+    }
+
     toast.success(`Sign up complete! ${userData.firstname}`);
-    setTimeout(() => {
-      navigate("/login");
-    }, 1500);
+    setTimeout(() => navigate("/login"), 1500);
+  } catch (error) {
+    toast.error("Sign up failed: " + error.message);
+  }
   };
 
   //save user data for every change in input
@@ -70,12 +94,12 @@ const SignUp = () => {
             <p className="form-title">Sign Up</p>
             <div className="input-container">
               <p>First name</p>
-              <input type="text" name="firstname" placeholder="Name" required />
+              <input type="text" name="firstName" placeholder="Name" required />
               <span></span>
             </div>
             <div className="input-container">
               <p>Last name</p>
-              <input type="text" name="lastname" placeholder="Name" required />
+              <input type="text" name="lastName" placeholder="Name" required />
               <span></span>
             </div>
             <div className="input-container">
@@ -92,11 +116,12 @@ const SignUp = () => {
               <p>Password</p>
               <input
                 type="password"
-                name="passwd"
+                name="password"
                 placeholder="Enter password"
                 required
               />
             </div>
+            {/*
             <div className="input-container">
               <p>Confirm Password</p>
               <input
@@ -116,6 +141,16 @@ const SignUp = () => {
                   title="password not identical"
                 />
               )}
+            </div>
+            */}
+            <div className="input-container">
+              <p>Phone Number</p>
+              <input
+                type="text"
+                name="phoneNumber"
+                placeholder="Enter phone number"
+                required
+              />
             </div>
             <div className="login">
               <button
