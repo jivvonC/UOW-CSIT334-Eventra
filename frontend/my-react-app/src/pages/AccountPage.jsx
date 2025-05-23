@@ -34,14 +34,13 @@ const AccountPage = () => {
   const menuItems = {
     provider: [
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
-      { key: "2", icon: <MessageOutlined />, label: "Messages" },
-      { key: "3", icon: <AppstoreOutlined />, label: "My Requests" },
-      { key: "4", icon: <ProfileOutlined />, label: "My Services" },
+      { key: "2", icon: <AppstoreOutlined />, label: "My Requests" },
+      { key: "3", icon: <ProfileOutlined />, label: "My Services" },
+      { key: "4", icon: <ProfileOutlined />, label: "Subscription" },
     ],
     customer: [
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
-      { key: "2", icon: <MessageOutlined />, label: "Messages" },
-      { key: "3", icon: <ProfileOutlined />, label: "My Bookings" },
+      { key: "2", icon: <ProfileOutlined />, label: "My Bookings" },
     ],
   };
 
@@ -63,10 +62,19 @@ const AccountPage = () => {
   );
 
   const renderProviderContent = () => {
-    if (selectedKey === "4") {
+    if (selectedKey === "1") {
       return (
         <>
-          <Title level={2}>My Services</Title>
+          <Title level={2}>My Account</Title>
+          <Text>Account information here.</Text>
+        </>
+      );
+    }
+
+    if (selectedKey === "2") {
+      return (
+        <>
+          <Title level={2}>Booking Requests</Title>
           <Tabs defaultActiveKey="1">
             <TabPane tab="My Listings" key="1">
               <Card
@@ -86,19 +94,35 @@ const AccountPage = () => {
                 <Text strong>Serving:</Text> Wollongong & Surrounding Areas
               </Card>
             </TabPane>
-            <TabPane tab="Offers" key="2">
-              <Text>No offers yet.</Text>
+            <TabPane tab="Accepted" key="2">
+              <Text>Booking accepted here.</Text>
             </TabPane>
             <TabPane tab="Completed" key="3">
-              <Text>No completed services yet.</Text>
-            </TabPane>
-            <TabPane tab="Subscription" key="4">
-              <Text>Subscription details coming soon.</Text>
+              <Text>Complete bookings here</Text>
             </TabPane>
           </Tabs>
         </>
       );
     }
+
+    if (selectedKey === "3") {
+      return (
+        <>
+          <Title level={2}>My services</Title>
+          <Text>List of services here</Text>
+        </>
+      );
+    }
+
+    if (selectedKey === "4") {
+      return (
+        <>
+          <Title level={2}>Subscribe</Title>
+          <Text>subscription here</Text>
+        </>
+      );
+    }
+
     return <Title level={3}>Coming Soon for Providers...</Title>;
   };
 
@@ -111,15 +135,8 @@ const AccountPage = () => {
         </>
       );
     }
+    
     if (selectedKey === "2") {
-      return (
-        <>
-          <Title level={2}>Chat messages</Title>
-          <Text>Here you can see the messages here.</Text>
-        </>
-      );
-    }
-    if (selectedKey === "3") {
       return (
         <>
           <Title level={2}>My Bookings</Title>
