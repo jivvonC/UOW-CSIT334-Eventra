@@ -792,11 +792,6 @@ const ProviderProfile = () => {
                         cursor: "pointer",
                       }}
                     >
-                      {/* <img
-                        className="productPic"
-                        src={item.photo}
-                        alt={item.name}
-                      /> */}
                       <div className="productDescription">
                         <h4>{item.name}</h4>
                         <span className="productPrice">

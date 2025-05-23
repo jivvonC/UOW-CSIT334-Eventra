@@ -26,23 +26,22 @@ const AccountPage = () => {
 
   const menuItems = [
     { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
-    { key: "2", icon: <MessageOutlined />, label: "Messages" },
-    { key: "3", icon: <AppstoreOutlined />, label: "My Requests" },
-    { key: "4", icon: <ProfileOutlined />, label: "My Services" },
+    { key: "2", icon: <AppstoreOutlined />, label: "My Requests" },
+    { key: "3", icon: <ProfileOutlined />, label: "My Services" },
   ];
 
   const renderMyServices = () => (
     <div style={{ padding: 24 }}>
       <Title level={2}>My Services</Title>
-      <Tabs defaultActiveKey='1' type='line' tabBarGutter={30}>
-        <Tabs.TabPane tab='My Listings' key='1'>
+      <Tabs defaultActiveKey="1" type="line" tabBarGutter={30}>
+        <Tabs.TabPane tab="My Listings" key="1">
           <Card
-            title='Professional Chef'
+            title="Professional Chef"
             bordered
             style={{ width: "100%", marginBottom: 24 }}
             extra={
               <div>
-                <Button type='primary' style={{ marginRight: 10 }}>
+                <Button type="primary" style={{ marginRight: 10 }}>
                   Edit
                 </Button>
                 <Button danger>Remove</Button>
@@ -53,13 +52,13 @@ const AccountPage = () => {
             <Text strong>Serving:</Text> Wollongong & Surrounding Areas
           </Card>
         </Tabs.TabPane>
-        <Tabs.TabPane tab='Offers' key='2'>
+        <Tabs.TabPane tab="Offers" key="2">
           <Text>No offers yet.</Text>
         </Tabs.TabPane>
-        <Tabs.TabPane tab='Completed' key='3'>
+        <Tabs.TabPane tab="Completed" key="3">
           <Text>No completed services yet.</Text>
         </Tabs.TabPane>
-        <Tabs.TabPane tab='Subscription' key='4'>
+        <Tabs.TabPane tab="Subscription" key="4">
           <Text>Subscription details coming soon.</Text>
         </Tabs.TabPane>
       </Tabs>
@@ -68,7 +67,7 @@ const AccountPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={250} theme='light'>
+      <Sider width={250} theme="light">
         <div
           style={{
             fontSize: "1.5em",
@@ -81,18 +80,23 @@ const AccountPage = () => {
           Event Services
         </div>
         <Menu
-          mode='vertical'
+          mode="vertical"
           selectedKeys={[selectedKey]}
           onClick={(e) => setSelectedKey(e.key)}
           items={menuItems}
         />
-        <Button onClick={handleLogout} type='default' danger style={{ margin: 16 }}>
+        <Button
+          onClick={handleLogout}
+          type="default"
+          danger
+          style={{ margin: 16 }}
+        >
           Log out
         </Button>
       </Sider>
       <Layout>
         <Content style={{ padding: "24px 40px" }}>
-          {selectedKey === "4" && renderMyServices()}
+          {selectedKey === "3" && renderMyServices()}
           {/* You can add more views here for other keys */}
         </Content>
       </Layout>
