@@ -34,6 +34,7 @@ const ProviderSignUp = () => {
     street: "",
     city: "",
     state: "",
+    location: "",
     postcode: "",
     servicecategory: "",
     email: "",
@@ -43,10 +44,24 @@ const ProviderSignUp = () => {
 
   //save user data for every change in input
   const handleInput = (e) => {
-    setUserData({
+    const { name, value } = e.target;
+
+    // 변경된 값 반영
+    const updatedUserData = {
       ...userData,
-      [e.target.name]: e.target.value,
-    });
+      [name]: value,
+    };
+
+    // 만약 주소 관련 값이 바뀐 경우, location도 새로 계산
+    if (["street", "city", "state"].includes(name)) {
+      const street = name === "street" ? value : userData.street;
+      const city = name === "city" ? value : userData.city;
+      const state = name === "state" ? value : userData.state;
+      updatedUserData.location = `${street}, ${city}, ${state}`;
+    }
+
+    // 상태 업데이트
+    setUserData(updatedUserData);
   };
 
   const {
@@ -58,6 +73,7 @@ const ProviderSignUp = () => {
     street,
     city,
     state,
+    location,
     postcode,
     servicecategory,
     email,
@@ -88,7 +104,7 @@ const ProviderSignUp = () => {
               <p>ABN</p>
               <input
                 type="text"
-                name="acn"
+                name="abn"
                 placeholder="Australian Business Number"
                 required
               />
