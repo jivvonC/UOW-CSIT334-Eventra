@@ -10,7 +10,6 @@ import AccountPage from "./pages/AccountPage";
 import NotificationPage from "./pages/NotificationPage";
 import ChatBoxPage from "./pages/ChatBox";
 import Login from "./pages/Login";
-import ServiceProfile from "./pages/ServiceProfile";
 import SignUp from "./pages/SignUp";
 import SignUpSelect from "./pages/SignUpSelect";
 import ProviderSignUp from "./pages/ProviderSignUp";
@@ -45,7 +44,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="notification" element={<NotificationPage />} />
             <Route path="chatbox" element={<ChatBoxPage />} />
             <Route path="login" element={<Login />} />
-            <Route path="/service/:id" element={<ServiceProfile />} />
             <Route path="signup" element={<SignUp />} />
             <Route path="signupselect" element={<SignUpSelect />} />
             <Route path="providersignup" element={<ProviderSignUp />} />
