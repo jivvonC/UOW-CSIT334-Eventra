@@ -10,11 +10,6 @@ import categories from "./data/categories.js";
 
 const ProviderSignUp = () => {
   const navigate = useNavigate();
-  const clickLoginButton = () => {
-    navigate("/login");
-    toast.success(`Sign up complete! ${username}`);
-  };
-
   const clickNextButton = () => {
     navigate("/payment", {
       state: {
