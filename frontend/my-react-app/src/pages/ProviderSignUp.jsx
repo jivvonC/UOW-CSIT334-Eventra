@@ -6,6 +6,7 @@ import { useState } from "react";
 import alert from "../assets/alert.png";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
+import categories from "./data/categories.js";
 
 const ProviderSignUp = () => {
   const navigate = useNavigate();
@@ -14,18 +15,28 @@ const ProviderSignUp = () => {
     toast.success(`Sign up complete! ${username}`);
   };
 
+  const clickNextButton = () => {
+    navigate("/payment", {
+      state: {
+        userData,
+        item: "Service Provider Subscription 1 month",
+        price: 20,
+      },
+    });
+  };
+
   const [userData, setUserData] = useState({
     servicename: "",
     abn: "",
-    fullname: "",
+    firstname: "",
+    lastname: "",
     phonenum: "",
-    email: "",
     street: "",
     city: "",
     state: "",
     postcode: "",
     servicecategory: "",
-    username: "",
+    email: "",
     passwd: "",
     passwdCheck: "",
   });
@@ -41,20 +52,20 @@ const ProviderSignUp = () => {
   const {
     servicename,
     abn,
-    fullname,
+    firstname,
+    lastname,
     phonenum,
-    email,
     street,
     city,
     state,
     postcode,
     servicecategory,
-    username,
+    email,
     passwd,
     passwdCheck,
   } = userData;
   const isSame = passwd === passwdCheck; //check if passwd and passwdCheck is same
-  const isValid = servicename !== "" && isSame === true && username !== ""; //check that all values are filled in
+  const isValid = servicename !== "" && isSame === true && email !== ""; //check that all values are filled in
 
   return (
     <S.WholePage>
@@ -87,8 +98,16 @@ const ProviderSignUp = () => {
               <p>Director Details</p>
               <input
                 type="text"
-                name="fullname"
-                placeholder="Full Name"
+                name="firstname"
+                placeholder="First name"
+                required
+              />
+              <span></span>
+              <br></br>
+              <input
+                type="text"
+                name="lastname"
+                placeholder="Last name"
                 required
               />
               <span></span>
@@ -99,9 +118,6 @@ const ProviderSignUp = () => {
                 placeholder="Phone Number"
                 required
               />
-              <span></span>
-              <br></br>
-              <input type="email" name="email" placeholder="Email" required />
             </div>
           </div>
           <div className="second">
@@ -135,21 +151,18 @@ const ProviderSignUp = () => {
               <select
                 className="servicecategory"
                 name="servicecategory"
+                value={servicecategory}
+                onChange={handleInput}
                 required
               >
-                <option value="plumbing">Plumbing</option>
-                <option value="electrician">Electrician</option>
-                <option value="gardening">Gardening</option>
-                <option value="florist">Florist</option>
-                <option value="makeup">Make Up</option>
-                <option value="hair">Hair Stylist</option>
-                <option value="venue">Venue rental</option>
-                <option value="moving">Moving</option>
-                <option value="photo">Photographer</option>
-                <option value="catering">Catering</option>
-                <option value="carpenter">Carpenter</option>
-                <option value="painter">Painter</option>
-                <option value="other">Other</option>
+                <option value="">Select a category</option>
+                {categories
+                  .filter((cat) => cat.name !== "All Services")
+                  .map((cat) => (
+                    <option key={cat.name} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
               </select>
               <span></span>
             </div>
@@ -165,10 +178,10 @@ const ProviderSignUp = () => {
 
           <div className="third">
             <div className="input-container">
-              <p>Username</p>
+              <p>Email</p>
               <input
                 type="email"
-                name="username"
+                name="email"
                 placeholder="Enter email"
                 required
               />
@@ -208,7 +221,10 @@ const ProviderSignUp = () => {
             <button
               type="submit"
               className="greenbtn"
-              onClick={() => clickLoginButton()}
+              onClick={(e) => {
+                e.preventDefault(); //prevent basic submit action
+                clickNextButton();
+              }}
             >
               Next
             </button>

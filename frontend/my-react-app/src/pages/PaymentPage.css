@@ -1,0 +1,8 @@
+.paybtn {
+  background-color: #adea16;
+  color: #000000;
+}
+
+.ant-message {
+  z-index: 9999 !important;
+}

@@ -291,7 +291,7 @@ export const SignUpCard = styled.div`
       .right {
     text-align: left;
     flex-basis: 400px;
-    padding-right: 5.5vw;
+    padding-right: 7.5vw;
     padding-top: 11vh;
     
   }
@@ -406,7 +406,7 @@ export const ProviderSignUp = styled.div`
   
 .postcode input{
     position: relative;
-    top: -18vh;
+    top: -17vh;
     left: 11vw;
     background-color: #fff;
     padding: 1rem;

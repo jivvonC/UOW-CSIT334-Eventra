@@ -9,21 +9,25 @@ import { toast } from "react-toastify";
 
 const SignUp = () => {
   const navigate = useNavigate();
+
+  const [userData, setUserData] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    passwd: "",
+    passwdCheck: "",
+  });
+
   const navigateToLogin1 = () => {
     navigate("/login");
   };
 
   const navigateToLogin2 = () => {
-    navigate("/login");
-    toast.success(`Sign up complete! ${username}`);
+    toast.success(`Sign up complete! ${userData.firstname}`);
+    setTimeout(() => {
+      navigate("/login");
+    }, 1500);
   };
-
-  const [userData, setUserData] = useState({
-    name: "",
-    username: "",
-    passwd: "",
-    passwdCheck: "",
-  });
 
   //save user data for every change in input
   const handleInput = (e) => {
@@ -33,9 +37,9 @@ const SignUp = () => {
     });
   };
 
-  const { name, username, passwd, passwdCheck } = userData;
+  const { firstname, lastname, email, passwd, passwdCheck } = userData;
   const isSame = passwd === passwdCheck; //check if passwd and passwdCheck is same
-  const isValid = name !== "" && isSame === true && username !== ""; //check that all values are filled in
+  const isValid = firstname !== "" && isSame === true && email !== ""; //check that all values are filled in
 
   return (
     <S.WholePage>
@@ -52,7 +56,10 @@ const SignUp = () => {
               <button
                 type="submit"
                 className="signupbtn"
-                onClick={navigateToLogin1}
+                onClick={(e) => {
+                  e.preventDefault(); // ✅ 폼 제출 막기
+                  navigateToLogin1(); // ✅ 바로 로그인 페이지 이동
+                }}
               >
                 Log in
               </button>
@@ -62,15 +69,20 @@ const SignUp = () => {
           <div className="right">
             <p className="form-title">Sign Up</p>
             <div className="input-container">
-              <p>Name</p>
-              <input type="text" name="name" placeholder="Name" required />
+              <p>First name</p>
+              <input type="text" name="firstname" placeholder="Name" required />
               <span></span>
             </div>
             <div className="input-container">
-              <p>Username</p>
+              <p>Last name</p>
+              <input type="text" name="lastname" placeholder="Name" required />
+              <span></span>
+            </div>
+            <div className="input-container">
+              <p>Email</p>
               <input
                 type="email"
-                name="username"
+                name="email"
                 placeholder="Enter email"
                 required
               />
@@ -105,14 +117,15 @@ const SignUp = () => {
                 />
               )}
             </div>
-            <br></br>
-            <br></br>
             <div className="login">
               <button
                 type="submit"
                 className="loginbtn"
                 disabled={isValid ? false : true}
-                onClick={() => navigateToLogin2()}
+                onClick={(e) => {
+                  e.preventDefault(); // ✅ 폼 제출 막기
+                  navigateToLogin2(); // ✅ 토스트 → 2초 후 이동
+                }}
               >
                 Sign up
               </button>

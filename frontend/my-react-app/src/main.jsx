@@ -58,7 +58,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           {/* Admin Pages Here */}
           <Route path="/admin" element={<AdminHomePage />} />
           <Route path="/admin/customers" element={<CustomerPage />} />
-          <Route path="/admin/service-providers" element={<ServiceProviderPage />} />
+          <Route
+            path="/admin/service-providers"
+            element={<ServiceProviderPage />}
+          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
