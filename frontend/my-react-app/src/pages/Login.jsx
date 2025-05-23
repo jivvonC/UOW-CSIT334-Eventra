@@ -8,6 +8,7 @@ import { message } from "antd";
 const mockUsers = [
   { email: "customer@test.com", password: "12345", role: "customer" },
   { email: "provider@test.com", password: "54321", role: "provider" },
+  { email: "admin@test.com", password: "54321", role: "admin" },
 ];
 
 const Login = () => {
@@ -41,6 +42,8 @@ const Login = () => {
         navigate("/account");
       } else if (user.role === "provider") {
         navigate("/account");
+      } else if (user.role === "admin") {
+        navigate("/admin");
       }
     } else {
       message.error("Invalid email or password.");
