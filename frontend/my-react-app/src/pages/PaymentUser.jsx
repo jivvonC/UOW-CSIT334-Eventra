@@ -6,8 +6,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
 const { Option } = Select;
+const { requestData } = location.state || {};
 
-const PaymentPage = () => {
+const PaymentUser = () => {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [amount, setAmount] = useState("");
@@ -16,7 +17,7 @@ const PaymentPage = () => {
   const [cvv, setCvv] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const { userData, item, price } = location.state || {};
+  const { requestData } = location.state || {};
 
   const handlePayment = () => {
     if (!cardNumber || !expiry || !cvv) {
@@ -30,9 +31,7 @@ const PaymentPage = () => {
     }
 
     const paymentData = {
-      userData,
-      item,
-      price,
+      requestData,
       paymentInfo: {
         cardNumber,
         expiry,
@@ -42,10 +41,10 @@ const PaymentPage = () => {
 
     console.log("Final Submit Data:", paymentData);
 
-    toast.success("Payment complete! Your registration is successful.");
+    toast.success("Payment complete! Your request has been submitted.");
 
     setTimeout(() => {
-      navigate("/login");
+      navigate("/account");
     }, 1000); // 메시지 띄운 후 2초 뒤에 이동
   };
 
@@ -54,8 +53,8 @@ const PaymentPage = () => {
       <h1>Card Payment</h1>
       <Card title="Payment Information">
         <div className="paymentInfo">
-          <p className="item">{item}</p>
-          <h3 className="price">${price} AUD</h3>
+          <p className="item">{requestData.selectedServiceName}</p>
+          <h3 className="price">${requestData.selectedServicePrice} AUD</h3>
         </div>
         <Input
           placeholder="Card Number"
@@ -88,4 +87,4 @@ const PaymentPage = () => {
   );
 };
 
-export default PaymentPage;
+export default PaymentUser;

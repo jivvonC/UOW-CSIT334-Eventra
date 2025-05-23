@@ -5,7 +5,16 @@ import { useNavigate } from "react-router-dom";
 import providers from "./data/providers";
 import SwiperComponent from "./SwiperComponent";
 import { useParams } from "react-router-dom";
-import { Form, Input, Button, DatePicker, TimePicker, Row, Col, Modal } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  DatePicker,
+  TimePicker,
+  Row,
+  Col,
+  Modal,
+} from "antd";
 import location from "../assets/location.png";
 import FormItem from "antd/es/form/FormItem";
 import { useRef, useState } from "react";
@@ -295,6 +304,13 @@ const ProviderProfile = () => {
     };
 
     console.log("Request Data to Submit:", requestData);
+
+    navigate("/paymentuser", {
+      state: {
+        requestData,
+      },
+    });
+
     setIsModalVisible(true);
     form.resetFields();
   };
@@ -530,19 +546,19 @@ const ProviderProfile = () => {
                     paddingRight: "1.25rem",
                   }}
                 >
-                  Submit
+                  Next
                 </Button>
               </Form.Item>
             </Form>
 
-            <Modal
+            {/* <Modal
               title="Success"
               open={isModalVisible}
               onOk={handleOk}
               closable={false}
             >
               <p>Your request has been submitted successfully. Thank you!</p>
-            </Modal>
+            </Modal> */}
           </div>
         </div>
 
