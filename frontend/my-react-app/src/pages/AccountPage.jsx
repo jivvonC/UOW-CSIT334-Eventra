@@ -41,7 +41,6 @@ const AccountPage = () => {
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
       { key: "2", icon: <AppstoreOutlined />, label: "My Requests" },
       { key: "3", icon: <ProfileOutlined />, label: "My Services" },
-      { key: "4", icon: <ProfileOutlined />, label: "Subscription" },
     ],
     customer: [
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
@@ -128,15 +127,6 @@ const AccountPage = () => {
         <>
           <Title level={2}>My services</Title>
           <Text>List of services here</Text>
-        </>
-      );
-    }
-
-    if (selectedKey === "4") {
-      return (
-        <>
-          <Title level={2}>Subscribe</Title>
-          <Text>subscription here</Text>
         </>
       );
     }
