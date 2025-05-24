@@ -46,46 +46,50 @@ const PaymentPage = () => {
 
     setTimeout(() => {
       navigate("/login");
-    }, 1000); // 메시지 띄운 후 2초 뒤에 이동
+    }, 1000);
+
+    return (
+      <div style={{ padding: 40, maxWidth: 600, margin: "auto" }}>
+        <h1>Card Payment</h1>
+        <Card title="Payment Information">
+          <div className="paymentInfo">
+            <p className="item">{item}</p>
+            <h3 className="price">${price} AUD</h3>
+          </div>
+          <Input
+            placeholder="Card Number"
+            maxLength={16}
+            value={cardNumber}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+              setCardNumber(value);
+            }}
+            style={{ marginBottom: 10 }}
+          />
+          <Input
+            placeholder="Expiry Date (MM/YY)"
+            value={expiry}
+            onChange={(e) => setExpiry(e.target.value)}
+            style={{ marginBottom: 10 }}
+          />
+          <Input
+            placeholder="CVV"
+            maxLength={3}
+            value={cvv}
+            onChange={(e) => setCvv(e.target.value)}
+            style={{ marginBottom: 10 }}
+          />
+          <Button
+            className="paybtn"
+            type="primary"
+            block
+            onClick={handlePayment}
+          >
+            Pay Now
+          </Button>
+        </Card>
+      </div>
+    );
   };
-
-  return (
-    <div style={{ padding: 40, maxWidth: 600, margin: "auto" }}>
-      <h1>Card Payment</h1>
-      <Card title="Payment Information">
-        <div className="paymentInfo">
-          <p className="item">{item}</p>
-          <h3 className="price">${price} AUD</h3>
-        </div>
-        <Input
-          placeholder="Card Number"
-          maxLength={16}
-          value={cardNumber}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, ""); // remove non-digits
-            setCardNumber(value);
-          }}
-          style={{ marginBottom: 10 }}
-        />
-        <Input
-          placeholder="Expiry Date (MM/YY)"
-          value={expiry}
-          onChange={(e) => setExpiry(e.target.value)}
-          style={{ marginBottom: 10 }}
-        />
-        <Input
-          placeholder="CVV"
-          maxLength={3}
-          value={cvv}
-          onChange={(e) => setCvv(e.target.value)}
-          style={{ marginBottom: 10 }}
-        />
-        <Button className="paybtn" type="primary" block onClick={handlePayment}>
-          Pay Now
-        </Button>
-      </Card>
-    </div>
-  );
 };
-
 export default PaymentPage;

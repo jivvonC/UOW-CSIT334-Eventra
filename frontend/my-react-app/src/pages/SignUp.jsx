@@ -16,7 +16,7 @@ const SignUp = () => {
     email: "",
     password: "",
     phoneNumber: "",
-    role: "CUSTOMER"
+    role: "CUSTOMER",
   });
 
   const navigateToLogin1 = () => {
@@ -24,33 +24,33 @@ const SignUp = () => {
   };
 
   const navigateToLogin2 = async () => {
-  const payload = {
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    email: userData.email,
-    password: userData.password,
-    phoneNumber: userData.phoneNumber,
-    role: userData.role
-  };
+    const payload = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      password: userData.password,
+      phoneNumber: userData.phoneNumber,
+      role: userData.role,
+    };
 
-  try {
-  const response = await fetch("http://localhost:9090/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch("http://localhost:9090/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to register");
+      if (!response.ok) {
+        throw new Error("Failed to register");
+      }
+
+      toast.success(`Sign up complete! ${userData.firstname}`);
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (error) {
+      toast.error("Sign up failed: " + error.message);
     }
-
-    toast.success(`Sign up complete! ${userData.firstname}`);
-    setTimeout(() => navigate("/login"), 1500);
-  } catch (error) {
-    toast.error("Sign up failed: " + error.message);
-  }
   };
 
   //save user data for every change in input
@@ -81,8 +81,8 @@ const SignUp = () => {
                 type="submit"
                 className="signupbtn"
                 onClick={(e) => {
-                  e.preventDefault(); // ✅ 폼 제출 막기
-                  navigateToLogin1(); // ✅ 바로 로그인 페이지 이동
+                  e.preventDefault(); // prevent form from submitting
+                  navigateToLogin1(); // back to login
                 }}
               >
                 Log in
@@ -158,8 +158,8 @@ const SignUp = () => {
                 className="loginbtn"
                 disabled={isValid ? false : true}
                 onClick={(e) => {
-                  e.preventDefault(); // ✅ 폼 제출 막기
-                  navigateToLogin2(); // ✅ 토스트 → 2초 후 이동
+                  e.preventDefault(); // prevent form from submitting
+                  navigateToLogin2(); // back to login + toast
                 }}
               >
                 Sign up

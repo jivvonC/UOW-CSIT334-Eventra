@@ -45,7 +45,7 @@ const PaymentUser = () => {
 
     setTimeout(() => {
       navigate("/account");
-    }, 1000); // 메시지 띄운 후 2초 뒤에 이동
+    }, 1000);
   };
 
   return (

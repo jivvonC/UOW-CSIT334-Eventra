@@ -294,7 +294,7 @@ const ProviderProfile = () => {
       second: values.time.second(),
     });
 
-    // 예시: 최종 제출 데이터
+    // finalized submitting data
     const requestData = {
       ...values,
       selectedServiceId: selectedService.id,
