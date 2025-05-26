@@ -10,44 +10,34 @@ import categories from "./data/categories.js";
 
 const ProviderSignUp = () => {
   const navigate = useNavigate();
-  const clickNextButton = () => {
-    navigate("/payment", {
-      state: {
-        userData,
-        item: "Service Provider Subscription 1 month",
-        price: 20,
-      },
-    });
-  };
 
   const [userData, setUserData] = useState({
-    servicename: "",
+    serviceName: "",
     abn: "",
-    firstname: "",
-    lastname: "",
-    phonenum: "",
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
     street: "",
     city: "",
     state: "",
     location: "",
     postcode: "",
-    servicecategory: "",
+    serviceCategory: "",
     email: "",
-    passwd: "",
+    password: "",
     passwdCheck: "",
+    role: "SERVICE_PROVIDER",
   });
 
-  //save user data for every change in input
+  // Save user data for every change in input
   const handleInput = (e) => {
     const { name, value } = e.target;
 
-    // 변경된 값 반영
     const updatedUserData = {
       ...userData,
       [name]: value,
     };
 
-    // 만약 주소 관련 값이 바뀐 경우, location도 새로 계산
     if (["street", "city", "state"].includes(name)) {
       const street = name === "street" ? value : userData.street;
       const city = name === "city" ? value : userData.city;
@@ -55,33 +45,74 @@ const ProviderSignUp = () => {
       updatedUserData.location = `${street}, ${city}, ${state}`;
     }
 
-    // 상태 업데이트
     setUserData(updatedUserData);
   };
 
+  const navigateToLogin = async () => {
+    const normalizeCategory = (category) => category.replace(/\s+/g, '').toUpperCase();
+    const payload = {
+      serviceName: userData.serviceName,
+      abn: userData.abn,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      phoneNumber: userData.phoneNumber,
+      location: userData.location,
+      postcode: userData.postcode,
+      serviceCategory: normalizeCategory(userData.serviceCategory),
+      email: userData.email,
+      password: userData.password,
+      role: "SERVICE_PROVIDER",
+      profilePictureUrl:
+        "https://i.pinimg.com/736x/9f/16/72/9f1672710cba6bcb0dfd93201c6d4c00.jpg",
+      coverPhotoUrl:
+        "https://jurlique.com.au/cdn/shop/articles/7_WAYS_TO_MAKE_EVERY_DAY_EARTH_DAY_9c2990e0-c893-4d66-9e7a-29b89c8dcf60.jpg?v=1742172049&width=1920",
+    };
+
+    try {
+      const response = await fetch("http://localhost:9090/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to register");
+      }
+
+      toast.success(`Sign up complete! ${userData.firstName}`);
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (error) {
+      toast.error("Sign up failed: " + error.message);
+    }
+  };
+
   const {
-    servicename,
+    serviceName,
     abn,
-    firstname,
-    lastname,
-    phonenum,
+    firstName,
+    lastName,
+    phoneNumber,
     street,
     city,
     state,
     location,
     postcode,
-    servicecategory,
+    serviceCategory,
     email,
-    passwd,
+    password,
     passwdCheck,
   } = userData;
-  const isSame = passwd === passwdCheck; //check if passwd and passwdCheck is same
-  const isValid = servicename !== "" && isSame === true && email !== ""; //check that all values are filled in
+
+  const isSame = password === passwdCheck;
+  const isValid = serviceName !== "" && isSame && email !== "";
+
 
   return (
     <S.WholePage>
       <S.ProviderSignUp>
-        <form className="form" onChange={handleInput}>
+        <form className="form">
           <p className="form-title">Sign Up</p>
           <br></br>
           <div className="first">
@@ -89,19 +120,21 @@ const ProviderSignUp = () => {
               <p>Service Name</p>
               <input
                 type="text"
-                name="servicename"
+                name="serviceName"
                 placeholder="Service Name/Business Name"
                 required
+                onChange={handleInput}
               />
               <span></span>
             </div>
             <div className="input-container">
-              <p>ABN</p>
+              <p>Australian Business Number (ABN)</p>
               <input
                 type="text"
                 name="abn"
                 placeholder="Australian Business Number"
                 required
+                onChange={handleInput}
               />
               <span></span>
             </div>
@@ -109,32 +142,35 @@ const ProviderSignUp = () => {
               <p>Director Details</p>
               <input
                 type="text"
-                name="firstname"
+                name="firstName"
                 placeholder="First name"
                 required
+                onChange={handleInput}
               />
               <span></span>
               <br></br>
               <input
                 type="text"
-                name="lastname"
+                name="lastName"
                 placeholder="Last name"
                 required
+                onChange={handleInput}
               />
               <span></span>
               <br></br>
               <input
                 type="text"
-                name="phonenum"
+                name="phoneNumber"
                 placeholder="Phone Number"
                 required
+                onChange={handleInput}
               />
             </div>
           </div>
           <div className="second">
             <div className="input-container">
               <p>Address</p>
-              <input type="text" name="street" placeholder="Street" required />
+              <input type="text" name="street" placeholder="Street" required value={street} onChange={handleInput} />
               <span></span>
               <br></br>
               <input
@@ -142,27 +178,25 @@ const ProviderSignUp = () => {
                 name="city"
                 placeholder="City/Suburb"
                 required
+                onChange={handleInput}
               />
               <span></span>
               <br></br>
-              <select className="state" name="state" required>
-                <option value="0" selected>
-                  State
-                </option>
-                <option value="nsw">NSW</option>
-                <option value="wa">WA</option>
-                <option value="sa">SA</option>
-                <option value="vic">VIC</option>
-                <option value="act">ACT</option>
-                <option value="tas">TAS</option>
-                <option value="nt">NT</option>
-                <option value="qld">QLD</option>
+              <select className="state" name="state" onChange={handleInput} required>
+                <option value="">State</option>
+                <option value="NSW">NSW</option>
+                <option value="WA">WA</option>
+                <option value="SA">SA</option>
+                <option value="VIC">VIC</option>
+                <option value="ACT">ACT</option>
+                <option value="TAS">TAS</option>
+                <option value="NT">NT</option>
+                <option value="QLD">QLD</option>
               </select>
               <p>Service Category</p>
               <select
                 className="servicecategory"
-                name="servicecategory"
-                value={servicecategory}
+                name="serviceCategory"
                 onChange={handleInput}
                 required
               >
@@ -183,6 +217,7 @@ const ProviderSignUp = () => {
                 name="postcode"
                 placeholder="Postcode"
                 required
+                onChange={handleInput}
               />
             </div>
           </div>
@@ -195,6 +230,7 @@ const ProviderSignUp = () => {
                 name="email"
                 placeholder="Enter email"
                 required
+                onChange={handleInput}
               />
               <span></span>
               <br></br>
@@ -203,9 +239,10 @@ const ProviderSignUp = () => {
               <p>Password</p>
               <input
                 type="password"
-                name="passwd"
+                name="password"
                 placeholder="Enter password"
                 required
+                onChange={handleInput}
               />
               <br></br>
             </div>
@@ -216,6 +253,7 @@ const ProviderSignUp = () => {
                 name="passwdCheck"
                 placeholder="Enter password"
                 required
+                onChange={handleInput}
               />
               &nbsp;
               {passwdCheck !== "" && !isSame && (
@@ -230,14 +268,15 @@ const ProviderSignUp = () => {
               )}
             </div>
             <button
-              type="submit"
+              type="button"
               className="greenbtn"
+              disabled={!isValid}
               onClick={(e) => {
                 e.preventDefault(); //prevent basic submit action
-                clickNextButton();
+                navigateToLogin();
               }}
             >
-              Next
+              Register
             </button>
           </div>
         </form>

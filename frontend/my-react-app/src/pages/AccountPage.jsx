@@ -1,19 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Layout,
-  Menu,
-  Tabs,
-  Card,
-  Button,
-  Typography,
-  Form,
-  Checkbox,
-  Input,
-  Select,
-  Upload,
-  Space,
-  message,
-} from "antd";
+import { Layout, Menu, Tabs, Card, Button, Typography, Form, Input, InputNumber, Select, Upload, Space, message, Row, Col, Statistic } from "antd";
 import {
   UserOutlined,
   MessageOutlined,
@@ -44,80 +30,391 @@ const AccountPage = () => {
   const navigate = useNavigate();
   const [selectedKey, setSelectedKey] = useState("1");
   const [role, setRole] = useState(null);
-  const [editMode, setEditMode] = useState(false);
-  //For Service Provider side, My services menu
-  const [services, setServices] = useState([
-    {
-      id: 1,
-      name: "Wedding Photography",
-      price: "$60 per hour",
-      description:
-        "Ceremony + Photoshoot. Includes editing of all photos, printing of selected photos, full access to print store.",
-      editMode: false,
-    },
-  ]);
+  const [profile, setProfile] = useState(null);
+  const [services, setServices] = useState([]);
+  const [editingService, setEditingService] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [bookingError, setBookingError] = useState(null);
+  const [providerBookings, setProviderBookings] = useState([]);
+  const [loadingProviderBookings, setLoadingProviderBookings] = useState(false);
+  const [providerBookingError, setProviderBookingError] = useState(null);
+  const [form] = Form.useForm();
+  const [isEditing, setIsEditing] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [newService, setNewService] = useState({
+    name: "",
+    description: "",
+    price: null,
+  });
 
   useEffect(() => {
-    const storedRole = localStorage.getItem("role");
-    if (!storedRole) {
-      navigate("/");
-    } else {
-      setRole(storedRole);
+    if (profile) {
+      form.setFieldsValue({
+        servicename: profile.serviceProviderProfile?.serviceName || "",
+        abn: profile.serviceProviderProfile?.abn || "",
+        firstname: profile.firstName || "",
+        lastname: profile.lastName || "",
+        phonenum: profile.phoneNumber || "",
+        location: profile.serviceProviderProfile?.location || "",
+        state: profile.serviceProviderProfile?.state || "",
+        postcode: profile.serviceProviderProfile?.postcode || "",
+        servicecategory: profile.serviceProviderProfile?.serviceCategory || "",
+        email: profile.email || "",
+      });
     }
-  }, [navigate]);
+  }, [profile, form]);
 
+  const toggleEditing = () => setIsEditing(prev => !prev);
+  
+
+  // Fetch services on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch("http://localhost:9090/api/services/my-services", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch services");
+        return res.json();
+      })
+      .then((data) => {
+        const servicesArray = Array.isArray(data.services) ? data.services : [];
+        setServices(servicesArray);
+      })
+      .catch((err) => console.error("Error fetching services:", err));
+  }, []);
+
+  // Add new service
+  const handleAddService = () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch("http://localhost:9090/api/services/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(newService),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create service");
+        return res.json();
+      })
+      .then(() => {
+        setNewService({ name: "", description: "", price: null });
+        return fetch("http://localhost:9090/api/services/my-services", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        const servicesArray = Array.isArray(data.services) ? data.services : [];
+        setServices(servicesArray);
+      })
+      .catch((err) => console.error("Error creating service:", err));
+  };
+
+  // Update existing service
+  const handleUpdateService = () => {
+    const token = localStorage.getItem("token");
+    if (!token || !editingService) return;
+
+    fetch("http://localhost:9090/api/services/update", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(editingService),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update service");
+        return res.json();
+      })
+      .then(() => {
+        setEditingService(null);
+        return fetch("http://localhost:9090/api/services/my-services", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        const servicesArray = Array.isArray(data.services) ? data.services : [];
+        setServices(servicesArray);
+      })
+      .catch((err) => console.error("Error updating service:", err));
+  };
+
+  // Delete service
+  const handleDeleteService = (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch(`http://localhost:9090/api/services/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete service");
+        // Update UI after deletion
+        setServices((prev) => prev.filter((s) => s.id !== id));
+      })
+      .catch((err) => console.error("Error deleting service:", err));
+  };
+
+  //Access bookings (SERVICE_PROVIDER)
+  useEffect(() => {
+    if (role !== 'service_provider' || selectedKey !== '2') return;
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setLoadingProviderBookings(true);
+    fetch("http://localhost:9090/api/bookings/my-bookings/provider", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch provider bookings");
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Provider Bookings Data:", data);
+        setProviderBookings(data.bookings || []);
+        setProviderBookingError(null);
+      })
+      .catch((err) => setProviderBookingError(err.message))
+      .finally(() => setLoadingProviderBookings(false));
+  }, [role, selectedKey]);
+
+  //Access Bookings (CUSTOMER)
+  useEffect(() => {
+    if (selectedKey === "2") {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      setLoadingBookings(true);
+      fetch("http://localhost:9090/api/bookings/my-bookings/customer", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Failed to fetch bookings");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          console.log("Customer Bookings Data:", data);
+          setBookings(data.bookings || []);
+          setBookingError(null);
+        })
+        .catch((err) => {
+          console.error(err);
+          setBookingError("Could not load your bookings.");
+        })
+        .finally(() => {
+          setLoadingBookings(false);
+        });
+    }
+  }, [selectedKey]);
+
+
+  // Fetch user role on mount
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    if (storedRole) setRole(storedRole.toLowerCase());
+  }, []);
+
+  // Fetch user profile when role changes
+  useEffect(() => {
+    if (!role) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch("http://localhost:9090/api/users/account", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch profile");
+        return res.json();
+      })
+      .then((data) => {
+        setProfile(data.user);
+      })
+      .catch((err) => console.error(err));
+  }, [role]);
+
+  async function acceptBooking(bookingReference) {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
+
+    const response = await fetch(`http://localhost:9090/api/bookings/${bookingReference}/provider-accept`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to accept booking");
+    }
+
+    return await response.json(); // assuming API returns updated booking object
+  }
+  
+  async function updateBookingStatus(bookingReference, status) {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
+
+    const response = await fetch(`http://localhost:9090/api/bookings/${bookingReference}/status`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update booking status");
+    }
+
+    return await response.json(); // Updated booking object
+  }
+
+  async function updateBookingStatusByEndpoint(bookingReference, status) {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
+
+    // Map statuses to your backend endpoints:
+    const endpointMap = {
+      COMPLETED: "complete",
+      ACCEPTED: "provider-accept",
+      REJECTED: "provider-reject",
+      CANCELLED_BY_CUSTOMER: "customer-cancel",
+      CANCELLED_BY_PROVIDER: "provider-cancel",
+      CONFIRMED_PAYMENT: "confirm-payment",
+      // add others if needed
+    };
+
+    const endpoint = endpointMap[status];
+    if (!endpoint) throw new Error(`No endpoint for status ${status}`);
+
+    const url = `http://localhost:9090/api/bookings/${bookingReference}/${endpoint}`;
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      // Only send body if endpoint requires it (e.g. provider-cancel might need reason)
+      // For now, let's not send a body since your current endpoints don't expect it
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update booking status");
+    }
+
+    return await response.json();
+  }
+
+  const handleChangeBookingStatus = async (bookingReference, status) => {
+    try {
+      let updatedBooking;
+      if (status === "ACCEPTED_AWAITING_PAYMENT") {
+        updatedBooking = await acceptBooking(bookingReference);
+      } else {
+        updatedBooking = await updateBookingStatusByEndpoint(bookingReference, status);
+      }
+
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.bookingReference === bookingReference ? updatedBooking : b
+        )
+      );
+    } catch (error) {
+      alert("Failed to update booking status.");
+    }
+  };
+
+  //Report Dashboard
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // Use "token" to be consistent
+
+    if (!token) {
+      setError("No auth token found");
+      return;
+    }
+
+    setLoading(true);
+    fetch("http://localhost:9090/api/reports/provider/dashboard-summary", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch dashboard summary");
+        return res.json();
+      })
+      .then((data) => {
+        if (data.status === 200) {
+          setSummary(data.dashboardSummary);
+          setError(null);
+        } else {
+          setError(data.message || "Unexpected error");
+          setSummary(null);
+        }
+      })
+      .catch((err) => {
+        setError(err.message);
+        setSummary(null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+
+
+  // Logout handler
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("role");
-    localStorage.removeItem("email");
+    localStorage.clear();
     navigate("/");
   };
 
-  //For Service Provider side, My services menu---Start
-  const handleAddService = () => {
-    const newService = {
-      id: Date.now(), // unique ID
-      name: "",
-      price: "",
-      description: "",
-      editMode: true,
-    };
-    setServices((prev) => [...prev, newService]);
-  };
-
-  const handleDelete = (id) => {
-    setServices((prev) => prev.filter((s) => s.id !== id));
-    message.success("Service deleted");
-  };
-
-  const toggleEditMode = (id, mode) => {
-    setServices((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, editMode: mode } : s))
-    );
-  };
-
-  const handleChange = (id, field, value) => {
-    setServices((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
-    );
-  };
-
-  const handleSave = (id) => {
-    toggleEditMode(id, false);
-    message.success("Service saved");
-  };
-
-  const handleCancel = (id) => {
-    toggleEditMode(id, false);
-  };
-  //For Service Provider side, My services menu---Finish
-
   const menuItems = {
-    provider: [
+    service_provider: [
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
       { key: "2", icon: <AppstoreOutlined />, label: "My Requests" },
       { key: "3", icon: <ProfileOutlined />, label: "My Services" },
+      { key: "4", icon: <ProfileOutlined />, label: "Analysis Report" },
     ],
     customer: [
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
@@ -125,9 +422,35 @@ const AccountPage = () => {
     ],
   };
 
-  const onFinish = (values) => {
-    console.log("Success:", values);
+  const onFinish = async (values) => {
+    console.log("Updated values:", values);
+
+    const token = localStorage.getItem("token"); // or sessionStorage
+
+    try {
+      const response = await fetch("http://localhost:9090/api/users/account", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // Important part
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      const data = await response.json();
+      console.log("Server response:", data);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
+
+
+
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
@@ -149,259 +472,346 @@ const AccountPage = () => {
         mode="vertical"
         selectedKeys={[selectedKey]}
         onClick={(e) => setSelectedKey(e.key)}
-        items={menuItems[role]}
+        items={menuItems[role] || []}
       />
-      <Button
-        onClick={handleLogout}
-        type="default"
-        danger
-        style={{ margin: 16 }}
-      >
+      <Button onClick={handleLogout} type="default" danger style={{ margin: 16 }}>
         Log out
       </Button>
     </Sider>
   );
 
+  //Service Provider UI
   const renderProviderContent = () => {
     if (selectedKey === "1") {
       return (
         <>
           <Title level={2}>My Account</Title>
+
           <Form
-            name="basic"
+            form={form}
+            name="accountForm"
             layout="vertical"
-            labelCol={{ span: 10 }}
-            wrapperCol={{ span: 20 }}
-            style={{ maxWidth: 600, padding: 24 }}
-            initialValues={{ remember: true }}
             onFinish={onFinish}
             onFinishFailed={onFinishFailed}
             autoComplete="off"
+            style={{ maxWidth: 600, padding: 24 }}
           >
-            <Form.Item label="Service Name" name="servicename">
-              <Input />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item label="Service Name" name="servicename">
+                  <Input disabled={!isEditing} />
+                </Form.Item>
 
-            <Form.Item label="ABN" name="abn">
-              <Input />
-            </Form.Item>
+                <Form.Item label="First name" name="firstname">
+                  <Input disabled={!isEditing} />
+                </Form.Item>
 
-            <Form.Item label="First name" name="firstname">
-              <Input />
-            </Form.Item>
+                <Form.Item label="Phone Number" name="phonenum">
+                  <Input disabled={!isEditing} />
+                </Form.Item>
 
-            <Form.Item label="Last name" name="lastname">
-              <Input />
-            </Form.Item>
+                <Form.Item label="Postcode" name="postcode">
+                  <Input disabled={!isEditing} />
+                </Form.Item>
 
-            <Form.Item label="Phone Number" name="phonenum">
-              <Input />
-            </Form.Item>
+                <Form.Item
+                  name="email"
+                  label="Email"
+                  rules={[
+                    {
+                      type: "email",
+                      message: "The input is not valid E-mail!",
+                    },
+                    {
+                      required: true,
+                      message: "Please input your email!",
+                    },
+                  ]}
+                >
+                  <Input disabled={!isEditing} />
+                </Form.Item>
+                
+                <Form.Item label="ABN" name="abn">
+                  <Input disabled={!isEditing} />
+                </Form.Item>
 
-            <Form.Item label="Street" name="street">
-              <Input />
-            </Form.Item>
+                {/* Commented out Upload fields (left column) */}
+                {/* <Form.Item
+                  name="photo1"
+                  label="Photo1"
+                  valuePropName="fileList"
+                  getValueFromEvent={normFile}
+                >
+                  <Upload name="logo" action="/upload.do" listType="picture">
+                    <Button icon={<UploadOutlined />}>Click to upload</Button>
+                  </Upload>
+                </Form.Item> */}
 
-            <Form.Item label="City/Suburb" name="city">
-              <Input />
-            </Form.Item>
+                {/* <Form.Item
+                  name="photo3"
+                  label="Photo3"
+                  valuePropName="fileList"
+                  getValueFromEvent={normFile}
+                >
+                  <Upload name="logo" action="/upload.do" listType="picture">
+                    <Button icon={<UploadOutlined />}>Click to upload</Button>
+                  </Upload>
+                </Form.Item> */}
+              </Col>
 
-            <Form.Item label="State" name="state">
-              <Select placeholder="State">
-                <Option value="nsw">NSW</Option>
-                <Option value="wa">WA</Option>
-                <Option value="sa">SA</Option>
-                <Option value="vic">VIC</Option>
-                <Option value="act">ACT</Option>
-                <Option value="tas">TAS</Option>
-                <Option value="nt">NT</Option>
-                <Option value="qld">QLD</Option>
-              </Select>
-            </Form.Item>
+              <Col span={12}>
 
-            <Form.Item label="Postcode" name="postcode">
-              <Input />
-            </Form.Item>
 
-            <Form.Item label="City/Suburb" name="city">
-              <Input />
-            </Form.Item>
+                <Form.Item label="Last name" name="lastname">
+                  <Input disabled={!isEditing} />
+                </Form.Item>
 
-            <Form.Item label="Service Category" name="servicecategory">
-              <Select placeholder="Select a category">
-                {categories
-                  .filter((cat) => cat.name !== "All Services")
-                  .map((cat) => (
-                    <option key={cat.name} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-              </Select>
-            </Form.Item>
+                <Form.Item label="Location" name="location">
+                  <Input disabled={!isEditing} />
+                </Form.Item>
 
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                {
-                  type: "email",
-                  message: "The input is not valid E-mail!",
-                },
-              ]}
-            >
-              <Input />
-            </Form.Item>
+                <Form.Item label="Service Category" name="servicecategory">
+                  <Select placeholder="Select a category" disabled={!isEditing}>
+                    {categories
+                      .filter((cat) => cat.name !== "All Services")
+                      .map((cat) => (
+                        <Option key={cat.name} value={cat.name}>
+                          {cat.name}
+                        </Option>
+                      ))}
+                  </Select>
+                </Form.Item>
 
-            <Form.Item name="password" label="Password" hasFeedback>
-              <Input.Password />
-            </Form.Item>
+                <Form.Item
+                  name="profpic"
+                  label="Profile Picture"
+                  valuePropName="fileList"
+                  getValueFromEvent={normFile}
+                >
+                  <Upload
+                    name="logo"
+                    action="/upload.do"
+                    listType="picture"
+                    disabled={!isEditing}
+                  >
+                    <Button icon={<UploadOutlined />} disabled={!isEditing}>
+                      Click to upload
+                    </Button>
+                  </Upload>
+                </Form.Item>
 
-            <Form.Item
-              name="profpic"
-              label="Profile Picture"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-            >
-              <Upload name="logo" action="/upload.do" listType="picture">
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
-            </Form.Item>
+                <Form.Item
+                  name="coverphoto"
+                  label="Cover Photo"
+                  valuePropName="fileList"
+                  getValueFromEvent={normFile}
+                >
+                  <Upload
+                    name="logo"
+                    action="/upload.do"
+                    listType="picture"
+                    disabled={!isEditing}
+                  >
+                    <Button icon={<UploadOutlined />} disabled={!isEditing}>
+                      Click to upload
+                    </Button>
+                  </Upload>
+                </Form.Item>
 
-            <Form.Item
-              name="coverphoto"
-              label="Cover Photo"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-            >
-              <Upload name="logo" action="/upload.do" listType="picture">
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
-            </Form.Item>
+                {/* Commented out Upload fields (right column) */}
+                {/* <Form.Item
+                  name="photo2"
+                  label="Photo2"
+                  valuePropName="fileList"
+                  getValueFromEvent={normFile}
+                >
+                  <Upload name="logo" action="/upload.do" listType="picture">
+                    <Button icon={<UploadOutlined />}>Click to upload</Button>
+                  </Upload>
+                </Form.Item> */}
 
-            <Form.Item
-              name="photo1"
-              label="Photo1"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-            >
-              <Upload name="logo" action="/upload.do" listType="picture">
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
-            </Form.Item>
+                {/* <Form.Item
+                  name="photo4"
+                  label="Photo4"
+                  valuePropName="fileList"
+                  getValueFromEvent={normFile}
+                >
+                  <Upload name="logo" action="/upload.do" listType="picture">
+                    <Button icon={<UploadOutlined />}>Click to upload</Button>
+                  </Upload>
+                </Form.Item> */}
+              </Col>
+            </Row>
 
-            <Form.Item
-              name="photo2"
-              label="Photo2"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-            >
-              <Upload name="logo" action="/upload.do" listType="picture">
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
-            </Form.Item>
-
-            <Form.Item
-              name="photo3"
-              label="Photo3"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-            >
-              <Upload name="logo" action="/upload.do" listType="picture">
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
-            </Form.Item>
-
-            <Form.Item
-              name="photo4"
-              label="Photo4"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-            >
-              <Upload name="logo" action="/upload.do" listType="picture">
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
-            </Form.Item>
-
-            <Form.Item label={null}>
-              <Button type="primary" htmlType="submit">
-                Submit
-              </Button>
-            </Form.Item>
+           
+            {isEditing ? (
+              <>
+                <Button type="primary" htmlType="submit">
+                  Save
+                </Button>
+                <Button onClick={toggleEditing} style={{ marginLeft: 8 }}>
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={toggleEditing}>Edit Profile</Button>
+                <Button onClick={() => navigate("/payment")} style={{ marginLeft: 8 }}>
+                  Pay Subscription
+                </Button>
+              </>
+            )}
+            
           </Form>
         </>
       );
     }
 
     if (selectedKey === "2") {
+      const filterBookingsByStatus = (status) =>
+      providerBookings.filter((b) => b.status === status);
+
       return (
         <>
           <Title level={2}>Booking Requests</Title>
+
+          {loadingProviderBookings && <p>Loading bookings...</p>}
+          {providerBookingError && <p style={{ color: "red" }}>{providerBookingError}</p>}
+          {!loadingProviderBookings && providerBookings.length === 0 && <p>No bookings found.</p>}
+
           <Tabs defaultActiveKey="1">
-            <TabPane tab="My Listings" key="1">
-              <Card
-                title="Professional Chef"
-                bordered
-                style={{ width: "100%", marginBottom: 24 }}
-                extra={<></>}
-              >
-                <Text strong>Rate:</Text> $60/hr <br />
-                <Text strong>Serving:</Text> Wollongong & Surrounding Areas
-              </Card>
+            <TabPane tab="New Bookings" key="1"> {/* PENDING */}
+              {filterBookingsByStatus("PENDING").map((booking) => (
+                <Card
+                  key={booking.id}
+                  title={`Booking by ${booking.user?.firstName || "Unknown"}`}
+                  style={{ marginBottom: 10 }}
+                  extra={
+                    <>
+                      <Button
+                        type="primary"
+                        onClick={() =>
+                          handleChangeBookingStatus(booking.bookingReference, "ACCEPTED_AWAITING_PAYMENT")
+                        }
+                        style={{ marginRight: 10 }}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        danger
+                        onClick={() =>
+                          handleChangeBookingStatus(booking.bookingReference, "REJECTED")
+                        }
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  }
+                >
+                  <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Date:</strong> {booking.preferredDate}</p>
+                  <p><strong>Time:</strong> {booking.preferredTime}</p>
+                  <p><strong>Status:</strong> {booking.status}</p>
+                  <p><strong>Customer Email:</strong> {booking.user?.email || "N/A"}</p>
+                  <p><strong>Customer Phone:</strong> {booking.user?.phoneNumber || "N/A"}</p>
+                </Card>
+              ))}
             </TabPane>
-            <TabPane tab="Pending" key="2">
-              <Card
-                title="Wedding Photography"
-                bordered
-                style={{ width: "100%", marginBottom: 24 }}
-                extra={
-                  <>
-                    <Button type="primary" style={{ marginRight: 10 }}>
-                      Accept
-                    </Button>
-                    <Button danger>Decline</Button>
-                  </>
-                }
-              >
-                <Text strong>Date/Time:</Text> 31/05/25 16:00
-                <br />
-                <Text strong>Location:</Text> Wollongong
-                <br />
-                <Text strong>Description:</Text> It's my wedding and I need a
-                photographer for my special day.
-              </Card>
+
+            <TabPane tab="Accepted (Awaiting Payment)" key="2"> {/* ACCEPTED_AWAITING_PAYMENT */}
+              {filterBookingsByStatus("ACCEPTED_AWAITING_PAYMENT").map((booking) => (
+                <Card
+                  key={booking.id}
+                  title={`Booking by ${booking.user?.firstName || "Unknown"}`}
+                  style={{ marginBottom: 10 }}
+                  extra={
+                    <>
+                      {/* No Accept button here as it's already accepted */}
+                      <Button
+                        danger
+                        onClick={() =>
+                          handleChangeBookingStatus(booking.bookingReference, "REJECTED")
+                        }
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  }
+                >
+                  <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Date:</strong> {booking.preferredDate}</p>
+                  <p><strong>Time:</strong> {booking.preferredTime}</p>
+                  <p><strong>Status:</strong> {booking.status}</p>
+                  <p><strong>Customer Email:</strong> {booking.user?.email || "N/A"}</p>
+                  <p><strong>Customer Phone:</strong> {booking.user?.phoneNumber || "N/A"}</p>
+                </Card>
+              ))}
             </TabPane>
-            <TabPane tab="Accepted" key="3">
-              <Card
-                title="Family Photo"
-                bordered
-                style={{ width: "100%", marginBottom: 24 }}
-                extra={
-                  <>
-                    <Button type="primary">Complete</Button>
-                  </>
-                }
-              >
-                <Text strong>Date/Time:</Text> 31/05/25 16:00
-                <br />
-                <Text strong>Location:</Text> Kiama
-                <br />
-                <Text strong>Description:</Text> Family photo for a family of 10
-              </Card>
+
+            <TabPane tab="Confirmed" key="3"> {/* CONFIRMED */}
+              {filterBookingsByStatus("CONFIRMED").map((booking) => (
+                <Card
+                  key={booking.id}
+                  title={`Booking by ${booking.user?.firstName || "Unknown"}`}
+                  style={{ marginBottom: 10 }}
+                  extra={
+                    <>
+                      <Button
+                        type="primary"
+                        onClick={() =>
+                          handleChangeBookingStatus(booking.bookingReference, "COMPLETED")
+                        }
+                        style={{ marginRight: 10 }}
+                      >
+                        Mark as Complete
+                      </Button>
+                    </>
+                  }
+                >
+                  <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Date:</strong> {booking.preferredDate}</p>
+                  <p><strong>Time:</strong> {booking.preferredTime}</p>
+                  <p><strong>Status:</strong> {booking.status}</p>
+                  <p><strong>Customer Email:</strong> {booking.user?.email || "N/A"}</p>
+                  <p><strong>Customer Phone:</strong> {booking.user?.phoneNumber || "N/A"}</p>
+                </Card>
+              ))}
             </TabPane>
-            <TabPane tab="Completed" key="4">
-              <Card
-                title="Birthday Party"
-                bordered
-                style={{ width: "100%", marginBottom: 24 }}
-                extra={<></>}
-              >
-                <Text strong>Date/Time:</Text> 31/05/25 16:00
-                <br />
-                <Text strong>Location:</Text> Kiama
-                <br />
-                <Text strong>Description:</Text> 10 year old boy's Birthday
-                party
-              </Card>
+
+            <TabPane tab="Completed" key="4"> {/* COMPLETED */}
+              {filterBookingsByStatus("COMPLETED").map((booking) => (
+                <Card
+                  key={booking.id}
+                  title={`Booking by ${booking.user?.firstName || "Unknown"}`}
+                  style={{ marginBottom: 10 }}
+                  extra={null}
+                >
+                  <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Date:</strong> {booking.preferredDate}</p>
+                  <p><strong>Time:</strong> {booking.preferredTime}</p>
+                  <p><strong>Status:</strong> {booking.status}</p>
+                  <p><strong>Customer Email:</strong> {booking.user?.email || "N/A"}</p>
+                  <p><strong>Customer Phone:</strong> {booking.user?.phoneNumber || "N/A"}</p>
+                </Card>
+              ))}
+            </TabPane>
+
+            <TabPane tab="Rejected" key="5"> {/* COMPLETED */}
+              {filterBookingsByStatus("REJECTED").map((booking) => (
+                <Card
+                  key={booking.id}
+                  title={`Booking by ${booking.user?.firstName || "Unknown"}`}
+                  style={{ marginBottom: 10 }}
+                  extra={null}
+                >
+                  <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Date:</strong> {booking.preferredDate}</p>
+                  <p><strong>Time:</strong> {booking.preferredTime}</p>
+                  <p><strong>Status:</strong> {booking.status}</p>
+                  <p><strong>Customer Email:</strong> {booking.user?.email || "N/A"}</p>
+                  <p><strong>Customer Phone:</strong> {booking.user?.phoneNumber || "N/A"}</p>
+                </Card>
+              ))}
             </TabPane>
           </Tabs>
         </>
@@ -412,139 +822,367 @@ const AccountPage = () => {
       return (
         <>
           <Title level={2}>My services</Title>
+          <div>
+            {Array.isArray(services) && services.length > 0 ? (
+              services.map((service) => (
+                <Card
+                  key={service.id}
+                  title={service.name}
+                  style={{ marginBottom: "10px" }}
+                >
+                  <p>{service.description}</p>
+                  {/* Removed location display */}
+                  <p>Price: ${service.price}</p>
+                  <Button
+                    onClick={() => setEditingService(service)}
+                    style={{ marginRight: "10px" }}
+                  >
+                    Edit
+                  </Button>
+                  <Button danger onClick={() => handleDeleteService(service.id)}>
+                    Delete
+                  </Button>
+                </Card>
+              ))
+            ) : (
+              <p>No services found.</p>
+            )}
+          </div>
 
-          <Space direction="vertical" style={{ width: "100%" }}>
-            {services.map((service) => (
-              <Card
-                key={service.id}
-                title={
-                  service.editMode ? (
-                    <Input
-                      value={service.name}
-                      onChange={(e) =>
-                        handleChange(service.id, "name", e.target.value)
-                      }
-                    />
-                  ) : (
-                    service.name
-                  )
-                }
-                bordered
-                style={{ width: "100%" }}
-                extra={
-                  service.editMode ? (
-                    <>
-                      <Button
-                        type="primary"
-                        onClick={() => handleSave(service.id)}
-                        style={{ marginRight: 10 }}
-                      >
-                        Save
-                      </Button>
-                      <Button onClick={() => handleCancel(service.id)}>
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        type="primary"
-                        style={{ marginRight: 10 }}
-                        onClick={() => toggleEditMode(service.id, true)}
-                      >
-                        Edit
-                      </Button>
-                      <Button danger onClick={() => handleDelete(service.id)}>
-                        Delete
-                      </Button>
-                    </>
-                  )
-                }
-              >
-                <Text strong>Name:</Text>{" "}
-                {service.editMode ? (
-                  <Input
-                    value={service.name}
-                    onChange={(e) =>
-                      handleChange(service.id, "name", e.target.value)
-                    }
-                  />
-                ) : (
-                  service.name
-                )}
-                <br />
-                <Text strong>Price:</Text>{" "}
-                {service.editMode ? (
-                  <Input
-                    value={service.price}
-                    onChange={(e) =>
-                      handleChange(service.id, "price", e.target.value)
-                    }
-                  />
-                ) : (
-                  service.price
-                )}
-                <br />
-                <Text strong>Description:</Text>{" "}
-                {service.editMode ? (
-                  <Input.TextArea
-                    rows={3}
-                    value={service.description}
-                    onChange={(e) =>
-                      handleChange(service.id, "description", e.target.value)
-                    }
-                  />
-                ) : (
-                  service.description
-                )}
-              </Card>
-            ))}
+          <div>
+            <Form layout="vertical" style={{ marginTop: 24 }}>
+              <Form.Item label="Service Name" required>
+                <Input
+                  value={editingService ? editingService.name : newService.name}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    editingService
+                      ? setEditingService({ ...editingService, name: value })
+                      : setNewService({ ...newService, name: value });
+                  }}
+                />
+              </Form.Item>
 
-            <Button
-              type="dashed"
-              style={{ width: "100%" }}
-              icon={<PlusOutlined />}
-              onClick={handleAddService}
-            >
-              Add Service
-            </Button>
-          </Space>
+              <Form.Item label="Description" required>
+                <Input
+                  value={
+                    editingService
+                      ? editingService.description
+                      : newService.description
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    editingService
+                      ? setEditingService({ ...editingService, description: value })
+                      : setNewService({ ...newService, description: value });
+                  }}
+                />
+              </Form.Item>
+
+              {/* Removed location input */}
+
+              <Form.Item label="Price" required>
+                <InputNumber
+                  style={{ width: "100%" }}
+                  value={
+                    editingService
+                      ? editingService.price ?? 0
+                      : newService.price ?? 0
+                  }
+                  formatter={(value) =>
+                    `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+                  min={0}
+                  onChange={(value) => {
+                    const newValue = value === null ? 0 : value;
+                    editingService
+                      ? setEditingService({ ...editingService, price: newValue })
+                      : setNewService({ ...newService, price: newValue });
+                  }}
+                />
+              </Form.Item>
+
+              {editingService ? (
+                <Button
+                  type="primary"
+                  onClick={handleUpdateService}
+                  disabled={
+                    !editingService.name ||
+                    !editingService.description ||
+                    editingService.price == null
+                  }
+                >
+                  Update Service
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  onClick={handleAddService}
+                  disabled={
+                    !newService.name ||
+                    !newService.description ||
+                    newService.price == null
+                  }
+                >
+                  Add Service
+                </Button>
+              )}
+
+              {editingService && (
+                <Button
+                  style={{ marginLeft: "10px" }}
+                  onClick={() => setEditingService(null)}
+                >
+                  Cancel Edit
+                </Button>
+              )}
+            </Form>
+          </div>
         </>
       );
     }
 
-    return <Title level={3}>Coming Soon for Providers...</Title>;
+    if (selectedKey === "4") {
+      if (loading) return <div>Loading report...</div>;
+      if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
+      if (!summary) return <div>No data available</div>;
+      console.log("Summary data:", summary);
+      
+      return (
+        <div>
+          <Title level={2}>Analysis Report for your service</Title>
+
+          <Row gutter={[24, 32]}>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Total bookings"
+                  value={summary.totalBookingsLifetime}
+                  precision={0}
+                  valueStyle={{ color: "#065cfd" }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Pending bookings"
+                  value={summary.pendingBookings}
+                  precision={0}
+                  valueStyle={{ color: "#fdd406" }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Waiting for payment bookings"
+                  value={summary.acceptedAwaitingPaymentBookings}
+                  precision={0}
+                  valueStyle={{ color: "#fdd406" }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Cancelled bookings"
+                  value={summary.cancelledBookingsLifetime}
+                  precision={0}
+                  valueStyle={{ color: "#cf1322" }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Confirmed bookings"
+                  value={summary.confirmedBookings}
+                  precision={0}
+                  valueStyle={{ color: "#3f8600" }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Completed Bookings in the last 30 Days"
+                  value={summary.completedBookingsLast30Days  }
+                  precision={0}
+                  valueStyle={{ color: "#3f8600" }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="All Completed Bookings"
+                  value={summary.completedBookingsLast30Days  }
+                  precision={0}
+                  valueStyle={{ color: "#3f8600" }}
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Potential revenue from confirmed"
+                  value={summary.potentialRevenueFromConfirmed}
+                  precision={0}
+                  valueStyle={{ color: "#065cfd" }}
+                  suffix="AUD"
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Total revenue for the last 30 days"
+                  value={summary.totalRevenueFromCompletedLast30Days}
+                  precision={0}
+                  valueStyle={{ color: "#065cfd" }}
+                  suffix="AUD"
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Total revenue so far"
+                  value={summary.totalRevenueFromCompletedLifetime}
+                  precision={0}
+                  valueStyle={{ color: "#065cfd" }}
+                  suffix="AUD"
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Current Average rating"
+                  value={summary.currentAverageRating}
+                  precision={1}
+                  valueStyle={{ color: "#065cfd" }}
+                  prefix={
+                    <img
+                      src="/star.png"
+                      alt="Star Icon"
+                      className="galleryItemRatingsIcon"
+                    />
+                  }
+                />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card variant="borderless">
+                <Statistic
+                  title="Total reviews"
+                  value={summary.totalReviews}
+                  precision={0}
+                  valueStyle={{ color: "#065cfd" }}
+                  suffix="reviews"
+                />
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      );
+    }
+    return null;
   };
 
-  const renderCustomerContent = () => {
+    const renderCustomerContent = () => {
     if (selectedKey === "1") {
       return (
         <>
           <Title level={2}>My Account</Title>
-          <Text>Account information here.</Text>
+          {profile ? (
+            <>
+              <Text>
+                <strong>First Name:</strong> {profile.firstName}
+              </Text>
+              <br />
+              <Text>
+                <strong>Last Name:</strong> {profile.lastName}
+              </Text>
+              <br />
+              <Text>
+                <strong>Email:</strong> {profile.email}
+              </Text>
+              <br />
+              <Text>
+                <strong>Phone Number:</strong> {profile.phoneNumber}
+              </Text>
+              <br />
+            </>
+          ) : (
+            <Text>Loading profile...</Text>
+          )}
         </>
       );
     }
-
+    
     if (selectedKey === "2") {
       return (
         <>
           <Title level={2}>My Bookings</Title>
-          <Text>You currently have no bookings.</Text>
+          {loadingBookings && <Text>Loading bookings...</Text>}
+          {bookingError && <Text type="danger">{bookingError}</Text>}
+          {!loadingBookings && bookings.length === 0 && (
+            <Text>No bookings found.</Text>
+          )}
+          {bookings.map((booking) => (
+            <Card key={booking.id} style={{ marginBottom: "10px" }}>
+              <p><strong>Service:</strong> {booking.service?.name || "N/A"}</p>
+              <p><strong>Status:</strong> {booking.status}</p>
+              <p><strong>Date:</strong> {booking.preferredDate}</p>
+              <p><strong>Time:</strong> {booking.preferredTime}</p>
+
+              {/* Example status update buttons */}
+              {booking.status === "CONFIRMED" && (
+                <Button
+                  danger
+                  onClick={() => handleChangeBookingStatus(booking.id, "CANCELLED")}
+                >
+                  Cancel
+                </Button>
+              )}
+              {booking.status === "ACCEPTED_AWAITING_PAYMENT" && (
+                <Button
+                  type="primary"
+                  onClick={() =>
+                    navigate("/paymentuser", {
+                      state: {
+                        requestData: {
+                          selectedServiceName: booking.service?.name,
+                          selectedServicePrice: booking.service?.price,
+                          bookingReference: booking.bookingReference,
+                        },
+                      },
+                    })
+                  }
+                >
+                  Pay Now
+                </Button>
+              )}
+            </Card>
+          ))}
         </>
       );
     }
-  };
 
-  if (!role) return null; // Avoid rendering if role not set yet
+    return null;
+  };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {renderSider()}
       <Layout>
-        <Content style={{ padding: "24px 40px" }}>
-          {role === "provider" && renderProviderContent()}
-          {role === "customer" && renderCustomerContent()}
+        <Content style={{ margin: "20px", overflow: "auto" }}>
+          {role === "service_provider" ? renderProviderContent() : null}
+          {role === "customer" ? renderCustomerContent() : null}
+          {!role && <Text>Please log in to see your account information.</Text>}
         </Content>
       </Layout>
     </Layout>

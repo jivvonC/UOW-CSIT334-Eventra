@@ -18,7 +18,11 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const { userData, item, price } = location.state || {};
 
-  const handlePayment = () => {
+  function formatServiceName(servicename) {
+    return servicename.replace(/\s+/g, "").toUpperCase();
+  }
+
+  const handlePayment = async () => {
     if (!cardNumber || !expiry || !cvv) {
       message.error("Please complete all fields.");
       return;
@@ -29,67 +33,82 @@ const PaymentPage = () => {
       return;
     }
 
-    const paymentData = {
-      userData,
-      item,
-      price,
-      paymentInfo: {
-        cardNumber,
-        expiry,
-        cvv,
-      },
-    };
+    try {
+      const token = localStorage.getItem("token");
 
-    console.log("Final Submit Data:", paymentData);
+      if (!token) {
+        toast.error("You are not logged in.");
+        return; // don't continue with payment if no token
+      }
 
-    toast.success("Payment complete! Your registration is successful.");
+      const paymentRes = await fetch(
+        "http://localhost:9090/api/payments/subscription/me/simulate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            dummyCardNumber: cardNumber,
+            dummyExpiryDate: expiry,
+            dummyCvv: cvv,
+          }),
+        }
+      );
 
-    setTimeout(() => {
-      navigate("/login");
-    }, 1000);
 
-    return (
-      <div style={{ padding: 40, maxWidth: 600, margin: "auto" }}>
-        <h1>Card Payment</h1>
-        <Card title="Payment Information">
-          <div className="paymentInfo">
-            <p className="item">{item}</p>
-            <h3 className="price">${price} AUD</h3>
-          </div>
-          <Input
-            placeholder="Card Number"
-            maxLength={16}
-            value={cardNumber}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, ""); // remove non-digits
-              setCardNumber(value);
-            }}
-            style={{ marginBottom: 10 }}
-          />
-          <Input
-            placeholder="Expiry Date (MM/YY)"
-            value={expiry}
-            onChange={(e) => setExpiry(e.target.value)}
-            style={{ marginBottom: 10 }}
-          />
-          <Input
-            placeholder="CVV"
-            maxLength={3}
-            value={cvv}
-            onChange={(e) => setCvv(e.target.value)}
-            style={{ marginBottom: 10 }}
-          />
-          <Button
-            className="paybtn"
-            type="primary"
-            block
-            onClick={handlePayment}
-          >
-            Pay Now
-          </Button>
-        </Card>
-      </div>
-    );
+      const paymentResult = await paymentRes.json();
+
+      if (paymentRes.ok && paymentResult.user?.isActive) {
+        toast.success(paymentResult.message);
+        setTimeout(() => navigate("/login"), 1500); // or redirect to dashboard
+      } else {
+        throw new Error(paymentResult.message || "Payment failed");
+      }
+    } catch (error) {
+      toast.error("Error: " + error.message);
+    }
   };
+
+
+  return (
+    <div style={{ padding: 40, maxWidth: 600, margin: "auto" }}>
+      <h1>Card Payment</h1>
+      <Card title="Payment Information">
+        <div className="paymentInfo">
+          <p className="item">{item}</p>
+          <h3 className="price">${price} AUD</h3>
+        </div>
+        <Input
+          placeholder="Card Number"
+          maxLength={16}
+          value={cardNumber}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+            setCardNumber(value);
+          }}
+          style={{ marginBottom: 10 }}
+        />
+        <Input
+          placeholder="Expiry Date (MM/YY)"
+          value={expiry}
+          onChange={(e) => setExpiry(e.target.value)}
+          style={{ marginBottom: 10 }}
+        />
+        <Input
+          placeholder="CVV"
+          maxLength={3}
+          value={cvv}
+          onChange={(e) => setCvv(e.target.value)}
+          style={{ marginBottom: 10 }}
+        />
+        <Button className="paybtn" type="primary" block onClick={handlePayment}>
+          Pay Now
+        </Button>
+      </Card>
+    </div>
+  );
 };
+
 export default PaymentPage;

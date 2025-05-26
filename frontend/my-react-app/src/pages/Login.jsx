@@ -3,13 +3,8 @@ import styled from "styled-components";
 import * as S from "../style";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { message } from "antd";
-
-const mockUsers = [
-  { email: "customer@test.com", password: "12345", role: "customer" },
-  { email: "provider@test.com", password: "54321", role: "provider" },
-  { email: "admin@test.com", password: "54321", role: "admin" },
-];
+// import { message } from "antd";  // REMOVE this import
+import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,28 +20,58 @@ const Login = () => {
     navigate("/forgotpw");
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const user = mockUsers.find(
-      (u) => u.email === email && u.password === password
-    );
+    try {
+      const response = await fetch("http://localhost:9090/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password.trim(),
+        }),
+      });
 
-    if (user) {
-      setIsLoggedIn(true);
-      localStorage.setItem("role", user.role);
-      localStorage.setItem("email", user.email);
-      message.success(`Welcome back, ${user.role}!`);
+      const data = await response.json();
+      console.log("Login response data:", data);
 
-      if (user.role === "customer") {
-        navigate("/account");
-      } else if (user.role === "provider") {
-        navigate("/account");
-      } else if (user.role === "admin") {
-        navigate("/admin");
+      if (response.ok && data.token && data.role) {
+        setIsLoggedIn(true);
+
+        // Store non-null data in localStorage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.role);
+        localStorage.setItem("email", email.trim());
+        if (data.isActive !== undefined) {
+          localStorage.setItem("isActive", data.isActive);
+        }
+        if (data.expirationTime) {
+          localStorage.setItem("expirationTime", data.expirationTime);
+        }
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
+        toast.success(`Welcome back, ${data.role.toLowerCase()}!`);
+
+        if (data.role === "CUSTOMER" || data.role === "SERVICE_PROVIDER") {
+          navigate("/account");
+        } else if (data.role === "ADMIN") {
+          navigate("/admin");
+        } else {
+          toast.warning("Unrecognized role.");
+        }
+      } else {
+        toast.error(data.message || "Invalid email or password.");
       }
-    } else {
-      message.error("Invalid email or password.");
+    } catch (err) {
+      console.log("Error condition hit");
+      // you used `data.message` here, but data won't be defined in catch
+      console.error("Login error:", err);
+      toast.error("Network error. Please try again.");
     }
   };
 
@@ -97,7 +122,9 @@ const Login = () => {
           <div className="right">
             <div className="signupmsg">
               <h3>
-                Don't have<br />an account?
+                Don't have
+                <br />
+                an account?
               </h3>
             </div>
 

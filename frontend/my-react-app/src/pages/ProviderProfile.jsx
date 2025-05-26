@@ -1,23 +1,15 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import * as S from "../style";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import providers from "./data/providers";
 import SwiperComponent from "./SwiperComponent";
-import { useParams } from "react-router-dom";
-import {
-  Form,
-  Input,
-  Button,
-  DatePicker,
-  TimePicker,
-  Row,
-  Col,
-  Modal,
-} from "antd";
+import { Form, Input, Button, DatePicker, TimePicker, Row, Col, Modal, Select } from "antd";
 import location from "../assets/location.png";
 import FormItem from "antd/es/form/FormItem";
-import { useRef, useState } from "react";
+import moment from "moment";
+
+
 
 const ProfileStyle = styled.div`
 .hehe {
@@ -268,82 +260,201 @@ max-width: 800px;
 
 const ProviderProfile = () => {
   const { id } = useParams();
-  const serviceId = parseInt(id, 10);
-  const service = providers.find((s) => s.id === serviceId);
-  const [form] = Form.useForm();
-  const [isModalVisible, setIsModalVisible] = React.useState(false);
-  const [selectedService, setSelectedService] = React.useState(null);
+  console.log("Current id:", id);
   const navigate = useNavigate();
 
-  if (!service) {
-    return <div className="pageBackgroundColor">Service not found.</div>;
+  const [provider, setProvider] = useState(null);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const [form] = Form.useForm();
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
+
+  const [reviews, setReviews] = useState([]); // Initialize reviews
+  const [newReview, setNewReview] = useState({
+    serviceId: "",
+    rating: "",
+    comment: "",
+  });
+  const [selectedService, setSelectedService] = useState(null);
+
+  const reviewRef = useRef(null);
+
+  function extractTime(isoDatetime) {
+    const date = new Date(isoDatetime);
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
   }
 
-  const onFinish = (values) => {
-    if (!selectedService) {
+  const fetchReviews = async () => {
+    try {
+      const token = localStorage.getItem('token'); // get auth token if needed
+      const response = await fetch(`http://localhost:9090/api/reviews/provider/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setReviews(data.reviews || []);
+    } catch (error) {
+      console.error('Reviews fetch error:', error);
+    }
+  };
+
+
+  useEffect(() => {
+    const fetchProviderData = async () => {
+      try {
+        const response = await fetch(`http://localhost:9090/api/users/service-providers/${id}`);
+        if (!response.ok) throw new Error("Failed to fetch provider data");
+        const data = await response.json();
+        setProvider(data.user);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchServices = async () => {
+      try {
+        const response = await fetch(`http://localhost:9090/api/services/provider/${id}`);
+        if (!response.ok) throw new Error("Failed to fetch services");
+        const data = await response.json();
+        setServices(data.services || []);
+      } catch (err) {
+        console.error("Service fetch error:", err.message);
+      }
+    };
+
+    fetchProviderData();
+    fetchServices();
+    fetchReviews();
+  }, [id]);
+
+
+  if (loading) {
+    return <div className="provider-profile">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="provider-profile error">Error: {error}</div>;
+  }
+  
+  const service = provider.serviceProviderProfile || {};
+
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+      : 0;
+
+  const onFinish = async (values) => {
+    const serviceId = values.serviceId;
+    const selected = services.find(s => s.id === serviceId);
+
+    if (!selected) {
       alert("Please select a service before submitting.");
       return;
     }
 
-    console.log("Form Values: ", values);
-    console.log("Selected Service: ", selectedService);
-
-    const combinedDateTime = values.date.clone().set({
-      hour: values.time.hour(),
-      minute: values.time.minute(),
-      second: values.time.second(),
-    });
-
-    // finalized submitting data
+    // Prepare request payload
     const requestData = {
-      ...values,
-      selectedServiceId: selectedService.id,
-      selectedServiceName: selectedService.name,
-      selectedServicePrice: selectedService.price,
-      datetime: combinedDateTime.format("YYYY-MM-DD HH:mm:ss"),
+      description: values.description,
+      location: values.location,
+      preferredDate: values.preferredDate,    // if you have these fields
+      preferredTime: extractTime(values.preferredTime),
+      status: "PENDING",
+      service: {
+        id: selected.id
+      }
     };
+
 
     console.log("Request Data to Submit:", requestData);
 
-    navigate("/paymentuser", {
-      state: {
-        requestData,
-      },
-    });
+    try {
+      const token = localStorage.getItem("token");
+      
 
-    setIsModalVisible(true);
-    form.resetFields();
-  };
+      const response = await fetch("http://localhost:9090/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      });
 
-  const handleOk = () => {
-    setIsModalVisible(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create booking");
+      }
+
+      const result = await response.json();
+      console.log("Booking successful:", result);
+      
+      alert("Booking submitted successfully and is pending provider approval.");
+
+      // Optional: reset form and state
+      form.resetFields();
+      setSelectedService(null);
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+      console.error("Booking error:", error);
+    }
   };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed: ", errorInfo);
   };
 
-  const [reviews, setReviews] = useState([
-    { id: 1, name: "Alice", rating: 4.5, comment: "Excellent service!" },
-    { id: 2, name: "Bob", rating: 3.5, comment: "Pretty good, thanks." },
-  ]);
-  const [newReview, setNewReview] = useState({
-    name: "",
-    rating: "",
-    comment: "",
-  });
-  const reviewRef = useRef(null);
-
-  const averageRating = (
-    reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length || 0
-  ).toFixed(1);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newReview.name || !newReview.rating || !newReview.comment) return;
-    setReviews([...reviews, { ...newReview, id: Date.now() }]);
-    setNewReview({ name: "", rating: "", comment: "" });
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`http://localhost:9090/api/reviews`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          providerProfileId: id,
+          offeredServiceId: newReview.serviceId,
+          rating: Number(newReview.rating),
+          comment: newReview.comment,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData.message.includes("already submitted")) {
+          alert("You have already submitted a review for this provider.");
+          // Optional: here you could fetch the existing review and prefill the form
+        } else {
+          throw new Error(errorData.message || "Failed to submit review");
+        }
+      } else {
+        const result = await response.json();
+        console.log("Review submitted:", result);
+        setNewReview({ rating: "", comment: "", serviceId: "" });
+        await fetchReviews();
+      }
+    } catch (err) {
+      console.error("Submit error:", err.message);
+    }
   };
+
+
 
   const scrollToReviews = () => {
     reviewRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -356,54 +467,38 @@ const ProviderProfile = () => {
           <SwiperComponent>
             {/*1*/}
             <div className="slice">
-              <img className="photo" src={service.photo1}></img>
+              <img className="photo" src="/cleaner1.jpg" alt="service photo 1" />
             </div>
             {/*2*/}
             <div className="slice">
-              <img className="photo" src={service.photo2}></img>
-            </div>
-            {/*3*/}
-            <div className="slice">
-              <img className="photo" src={service.photo3}></img>
-            </div>
-            {/*4*/}
-            <div className="slice">
-              <img className="photo" src={service.photo4}></img>
+              <img className="photo" src="/cleaner2.jpg" alt="service photo 2" />
             </div>
           </SwiperComponent>
         </div>
 
-        <h2 className="serviceNameRating">
-          {service.name}&nbsp;
-          <img
-            src="/star.png"
-            alt="Star Icon"
-            className="galleryItemRatingsIcon"
-          />
+        <h2 className="serviceNameRating" style={{ marginBottom: "10px" }}>
+          {provider.serviceProviderProfile.serviceName}&nbsp;
+          <img src="/star.png" alt="Star Icon" className="galleryItemRatingsIcon" />
           &nbsp;&nbsp;
           {averageRating}
         </h2>
 
         <div className="serviceTitleLocationDescription">
           <h3>
-            {service.title}
-            <br></br>
-            <img src={location} height="16px" width="15px"></img>&nbsp;
+            {service.serviceCategory}
+            <br /> 
+            <img src={location} height="16px" width="15px" alt="Location Icon" />
+            &nbsp;
             {service.location}
           </h3>
-          <p>{service.description}</p>
         </div>
 
         <div className="summary-review">
           <h3>Reviews</h3>
-          <br></br>
+          <br />
           <div className="content">
             <h4 style={{ display: "inline" }}>
-              <img
-                src="/star.png"
-                alt="Star Icon"
-                className="galleryItemRatingsIcon"
-              />{" "}
+              <img src="/star.png" alt="Star Icon" className="galleryItemRatingsIcon" />{" "}
               {averageRating} / 5.0 <span>&nbsp;&nbsp;&nbsp;</span>"
               {reviews[0]?.comment}" - {reviews[0]?.name}
             </h4>
@@ -412,6 +507,7 @@ const ProviderProfile = () => {
             </button>
           </div>
         </div>
+
         <div className="serviceRequestContainer">
           <h3>Request Form</h3>
           <div className="serviceFormContainer">
@@ -426,40 +522,24 @@ const ProviderProfile = () => {
             >
               <Form.Item
                 label="Select Service"
-                name="servicetype"
-                rules={[
-                  { required: true, message: "Please select a service." },
-                ]}
-                className="serviceRequestHeaders"
+                name="serviceId"
+                rules={[{ required: true, message: "Please select a service." }]}
               >
-                <div>
-                  {service.service.map((item) => (
-                    <div
-                      key={item.id}
-                      className="serviceProduct"
-                      onClick={() => {
-                        setSelectedService(item);
-                        form.setFieldsValue({ servicetype: item.name }); // 이거 중요!
-                      }}
-                      style={{
-                        borderColor:
-                          selectedService?.id === item.id
-                            ? "#1890ff"
-                            : "#D3D3D3",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <div className="productDescription">
-                        <h4>{item.name}</h4>
-                        <span className="productPrice">
-                          ${item.price} per hour
-                        </span>
-                        <span className="productDesc">{item.description}</span>
-                      </div>
-                    </div>
+                <Select
+                  placeholder="Select a service"
+                  onChange={(value) => {
+                    const found = services.find((s) => s.id === value);
+                    setSelectedService(found);
+                  }}
+                >
+                  {services.map((item) => (
+                    <Select.Option key={item.id} value={item.id}>
+                      {item.name} - ${item.price}/hr
+                    </Select.Option>
                   ))}
-                </div>
+                </Select>
               </Form.Item>
+
               <Form.Item
                 label="Detailed Description"
                 name="description"
@@ -477,38 +557,28 @@ const ProviderProfile = () => {
               <Form.Item
                 label="Location"
                 name="location"
-                rules={[
-                  { required: true, message: "Please enter a location!" },
-                ]}
+                rules={[{ required: true, message: "Please enter a location!" }]}
                 className="serviceRequestHeaders"
               >
                 <Input placeholder="Your location" />
               </Form.Item>
 
               <Row gutter={16}>
-                {" "}
-                {/* Use Row with gutter for spacing */}
                 <Col span={12}>
-                  {" "}
-                  {/* Each Col takes half of the row width (adjust span as needed) */}
                   <Form.Item
                     label="Preferred Date"
-                    name="date"
-                    rules={[
-                      { required: true, message: "Please select a date!" },
-                    ]}
+                    name="preferredDate"
+                    rules={[{ required: true, message: "Please select a date!" }]}
                     className="serviceRequestHeaders"
                   >
-                    <DatePicker style={{ width: "100%" }} />
+                    <DatePicker style={{ width: "100%" }} disabledDate={(current) => current && current < moment().startOf('day')} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item
                     label="Preferred Time"
-                    name="time"
-                    rules={[
-                      { required: true, message: "Please select a time!" },
-                    ]}
+                    name="preferredTime"
+                    rules={[{ required: true, message: "Please select a time!" }]}
                     className="serviceRequestHeaders"
                   >
                     <TimePicker style={{ width: "100%" }} format="HH:mm" />
@@ -516,15 +586,7 @@ const ProviderProfile = () => {
                 </Col>
               </Row>
 
-              <Form.Item></Form.Item>
-
-              <Form.Item
-                style={{
-                  display: "flex",
-                  justifyContent: "end",
-                  marginTop: "-50px",
-                }}
-              >
+              <Form.Item>
                 <Button
                   type="primary"
                   htmlType="submit"
@@ -550,82 +612,82 @@ const ProviderProfile = () => {
                 </Button>
               </Form.Item>
             </Form>
-
-            {/* <Modal
-              title="Success"
-              open={isModalVisible}
-              onOk={handleOk}
-              closable={false}
-            >
-              <p>Your request has been submitted successfully. Thank you!</p>
-            </Modal> */}
           </div>
         </div>
 
         <div className="contact">
-          <img className="profpic" src={service.profilePic}></img>
+          <img className="profpic" src="/profile.jpg" alt="Profile" />
           <div className="info">
-            <p className="name">{service.name}</p>
-            <p className="contacts">Phone: {service.contact}</p>
+            <p className="name">{provider.firstName} {provider.lastName}</p>
+            <p className="contacts">Phone: {provider.phoneNumber}</p>
+            <p className="contacts">Email: {provider.email}</p>
           </div>
         </div>
 
         <div ref={reviewRef} className="review-section">
           <h3>
             All Reviews (
-            <img
-              src="/star.png"
-              alt="Star Icon"
-              className="galleryItemRatingsIcon"
-            />
-            {averageRating})
+            <img src="/star.png" alt="Star Icon" className="galleryItemRatingsIcon" />
+            {reviews.length > 0 ? averageRating.toFixed(1) : 'N/A'})
           </h3>
-          {reviews.map((r) => (
-            <div key={r.id} className="review-card">
-              <strong>{r.name}</strong> - {r.rating}
-              <img
-                src="/star.png"
-                alt="Star Icon"
-                className="galleryItemRatingsIcon"
-              />
-              <p>{r.comment}</p>
-            </div>
-          ))}
+
+          {reviews.length > 0 ? (
+            reviews.map((r) => (
+              <div key={r.id} className="review-card">
+                <h4>{r.reviewerInfo.firstName} {r.reviewerInfo.lastName}</h4>
+                <p>Service Name: {r.serviceNameReviewed}</p>
+                <p>Rating: {r.rating}</p>
+                <div>
+                  <p>Comment:</p>
+                  <p>{r.comment}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No reviews yet.</p>
+          )}
+
           <form className="review-form" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Your name"
-              value={newReview.name}
+            <select
+              value={newReview.serviceId}
               onChange={(e) =>
-                setNewReview({ ...newReview, name: e.target.value })
+                setNewReview({ ...newReview, serviceId: e.target.value })
               }
-            />
+              required
+            >
+              <option value="">Select Service</option>
+              {services.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name}
+                </option>
+              ))}
+            </select>
+
             <input
               type="number"
-              step="0.5"
-              min="0"
+              min="1"
               max="5"
-              placeholder="Rating (0~5)"
+              placeholder="Rating"
               value={newReview.rating}
               onChange={(e) =>
-                setNewReview({
-                  ...newReview,
-                  rating: parseFloat(e.target.value),
-                })
+                setNewReview({ ...newReview, rating: e.target.value })
               }
+              required
             />
+
             <textarea
-              placeholder="Your comment"
+              placeholder="Comment"
               value={newReview.comment}
               onChange={(e) =>
                 setNewReview({ ...newReview, comment: e.target.value })
               }
-            ></textarea>
-            <button type="submit">Submit Review</button>
-          </form>
-        </div>
+              required
+            />
 
-        <br></br>
+            <button type="submit">Add Review</button>
+          </form>
+
+        </div>
       </div>
     </ProfileStyle>
   );

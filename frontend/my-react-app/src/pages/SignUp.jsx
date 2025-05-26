@@ -15,8 +15,9 @@ const SignUp = () => {
     lastName: "",
     email: "",
     password: "",
+    passwdCheck: "",
     phoneNumber: "",
-    role: "CUSTOMER",
+    role: "CUSTOMER"
   });
 
   const navigateToLogin1 = () => {
@@ -24,33 +25,33 @@ const SignUp = () => {
   };
 
   const navigateToLogin2 = async () => {
-    const payload = {
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      password: userData.password,
-      phoneNumber: userData.phoneNumber,
-      role: userData.role,
-    };
+  const payload = {
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    email: userData.email,
+    password: userData.password,
+    phoneNumber: userData.phoneNumber,
+    role: userData.role
+  };
 
-    try {
-      const response = await fetch("http://localhost:9090/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+  try {
+  const response = await fetch("http://localhost:9090/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
 
-      if (!response.ok) {
-        throw new Error("Failed to register");
-      }
-
-      toast.success(`Sign up complete! ${userData.firstname}`);
-      setTimeout(() => navigate("/login"), 1500);
-    } catch (error) {
-      toast.error("Sign up failed: " + error.message);
+    if (!response.ok) {
+      throw new Error("Failed to register");
     }
+
+    toast.success(`Sign up complete! ${userData.firstName}`);
+    setTimeout(() => navigate("/login"), 1500);
+  } catch (error) {
+    toast.error("Sign up failed: " + error.message);
+  }
   };
 
   //save user data for every change in input
@@ -61,14 +62,20 @@ const SignUp = () => {
     });
   };
 
-  const { firstname, lastname, email, passwd, passwdCheck } = userData;
-  const isSame = passwd === passwdCheck; //check if passwd and passwdCheck is same
-  const isValid = firstname !== "" && isSame === true && email !== ""; //check that all values are filled in
+  const { firstName, lastName, email, password, passwdCheck } = userData;
+  const isSame = password === passwdCheck; //check if passwd and passwdCheck is same
+  const isValid =
+  firstName.trim() !== "" &&
+  lastName.trim() !== "" &&
+  email.trim() !== "" &&
+  password.trim() !== "" &&
+  passwdCheck.trim() !== "" &&
+  isSame; //check that all values are filled in
 
   return (
     <S.WholePage>
       <S.StyledWrapper2>
-        <form className="form" onChange={handleInput}>
+        <form className="form">
           <div className="left">
             <div className="signupmsg">
               <h3>
@@ -81,8 +88,8 @@ const SignUp = () => {
                 type="submit"
                 className="signupbtn"
                 onClick={(e) => {
-                  e.preventDefault(); // prevent form from submitting
-                  navigateToLogin1(); // back to login
+                  e.preventDefault(); // ✅ 폼 제출 막기
+                  navigateToLogin1(); // ✅ 바로 로그인 페이지 이동
                 }}
               >
                 Log in
@@ -94,12 +101,12 @@ const SignUp = () => {
             <p className="form-title">Sign Up</p>
             <div className="input-container">
               <p>First name</p>
-              <input type="text" name="firstName" placeholder="Name" required />
+              <input type="text" name="firstName" placeholder="Name" required value={userData.firstName} onChange={handleInput} />
               <span></span>
             </div>
             <div className="input-container">
               <p>Last name</p>
-              <input type="text" name="lastName" placeholder="Name" required />
+              <input type="text" name="lastName" placeholder="Name" required value={userData.lastName} onChange={handleInput} />
               <span></span>
             </div>
             <div className="input-container">
@@ -109,6 +116,8 @@ const SignUp = () => {
                 name="email"
                 placeholder="Enter email"
                 required
+                value={userData.email}
+                onChange={handleInput}
               />
               <span></span>
             </div>
@@ -119,9 +128,11 @@ const SignUp = () => {
                 name="password"
                 placeholder="Enter password"
                 required
+                value={userData.password}
+                onChange={handleInput}
               />
             </div>
-            {/*
+            
             <div className="input-container">
               <p>Confirm Password</p>
               <input
@@ -129,6 +140,8 @@ const SignUp = () => {
                 name="passwdCheck"
                 placeholder="Enter password"
                 required
+                value={userData.passwdCheck}
+                onChange={handleInput}
               />
               &nbsp;&nbsp;
               {passwdCheck !== "" && !isSame && (
@@ -142,7 +155,7 @@ const SignUp = () => {
                 />
               )}
             </div>
-            */}
+            
             <div className="input-container">
               <p>Phone Number</p>
               <input
@@ -150,6 +163,8 @@ const SignUp = () => {
                 name="phoneNumber"
                 placeholder="Enter phone number"
                 required
+                value={userData.phoneNumber}
+                onChange={handleInput}
               />
             </div>
             <div className="login">
@@ -158,8 +173,8 @@ const SignUp = () => {
                 className="loginbtn"
                 disabled={isValid ? false : true}
                 onClick={(e) => {
-                  e.preventDefault(); // prevent form from submitting
-                  navigateToLogin2(); // back to login + toast
+                  e.preventDefault(); // ✅ 폼 제출 막기
+                  navigateToLogin2(); // ✅ 토스트 → 2초 후 이동
                 }}
               >
                 Sign up

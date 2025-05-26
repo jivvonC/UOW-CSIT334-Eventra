@@ -1,52 +1,84 @@
 import React, { useState } from "react";
-import { Card, Input, Button, Select, message } from "antd";
+import { Card, Input, Button, message } from "antd";
 import "./PaymentPage.css";
 import { useLocation, useNavigate } from "react-router-dom";
-import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
-const { Option } = Select;
-const { requestData } = location.state || {};
-
 const PaymentUser = () => {
-  const [selectedProvider, setSelectedProvider] = useState(null);
-  const [selectedService, setSelectedService] = useState(null);
-  const [amount, setAmount] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
   const { requestData } = location.state || {};
 
-  const handlePayment = () => {
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+
+  if (!requestData || !requestData.bookingReference) {
+    return <p>No valid booking reference found. Please go back and select a booking to pay.</p>;
+  }
+
+  const handlePayment = async () => {
+    console.log("handlePayment called");
+
     if (!cardNumber || !expiry || !cvv) {
       message.error("Please complete all fields.");
       return;
     }
+
+    console.log("All fields complete");
 
     if (cardNumber.length !== 16) {
       message.error("Card number must be exactly 16 digits.");
       return;
     }
 
-    const paymentData = {
-      requestData,
-      paymentInfo: {
-        cardNumber,
-        expiry,
-        cvv,
-      },
+    const token = localStorage.getItem("token");
+    console.log("Token:", token);
+
+    if (!token) {
+      toast.error("You are not logged in. Please log in to continue.");
+      navigate("/login");
+      return;
+    }
+
+    const paymentInfo = {
+      dummyCardNumber: cardNumber,
+      dummyExpiryDate: expiry,
+      dummyCvv: cvv,
     };
 
-    console.log("Final Submit Data:", paymentData);
+    try {
+      console.log("Sending payment request with:", paymentInfo);
+      const response = await fetch(
+        `http://localhost:9090/api/payments/booking/${requestData.bookingReference}/simulate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(paymentInfo),
+        }
+      );
 
-    toast.success("Payment complete! Your request has been submitted.");
+      console.log("Response status:", response.status);
 
-    setTimeout(() => {
-      navigate("/account");
-    }, 1000);
+      if (!response.ok) {
+        throw new Error("Payment failed");
+      }
+
+      toast.success("Payment complete! Your request has been submitted.");
+
+      setTimeout(() => {
+        navigate("/account");
+      }, 1000);
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Payment failed. Please try again.");
+    }
   };
+
+
 
   return (
     <div style={{ padding: 40, maxWidth: 600, margin: "auto" }}>
@@ -61,7 +93,7 @@ const PaymentUser = () => {
           maxLength={16}
           value={cardNumber}
           onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+            const value = e.target.value.replace(/\D/g, "");
             setCardNumber(value);
           }}
           style={{ marginBottom: 10 }}
