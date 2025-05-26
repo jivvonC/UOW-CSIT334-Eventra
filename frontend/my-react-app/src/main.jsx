@@ -1,4 +1,7 @@
 // src/main.jsx
+if (typeof global === "undefined") {
+  window.global = window;
+}
 import React from "react";
 import ReactDOM from "react-dom/client";
 import ScrollToTop from "./ScrollToTop";
@@ -24,6 +27,11 @@ import CustomerPage from "./pages/admin/CustomerPage";
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import ServiceProviderPage from "./pages/admin/ServiceProviderPage";
 import PaymentUser from "./pages/PaymentUser";
+import ChatPage from "./pages/ChatPage";
+import ChatRoomList from "./pages/ChatRoomList";
+import ChatWindow from "./pages/ChatWindow";
+import ChatInput from "./pages/ChatInput";
+import ServiceProviderList from "./pages/ServiceProviderList";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -53,6 +61,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="payment" element={<PaymentPage />} />
             <Route path="paymentuser" element={<PaymentUser />} />
+            <Route path="chatpage" element={<ChatPage />} />
+            <Route path="chatroomlist" element={<ChatRoomList />} />
+            <Route path="chatwindow" element={<ChatWindow />} />
+            <Route path="chatinput" element={<ChatInput />} />
+            <Route
+              path="serviceproviderlist"
+              element={<ServiceProviderList />}
+            />
           </Route>
 
           {/* Admin Pages Here */}

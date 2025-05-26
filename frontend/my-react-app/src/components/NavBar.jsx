@@ -112,7 +112,7 @@ const NavBar = ({ onSearch, selectedLocation, setSelectedLocation }) => {
             </>
           ) : (
             <>
-              <Link to="/chatbox" className="nav-link">
+              <Link to="/chatpage" className="nav-link">
                 <img src="chat.png" alt="Chat" className="profile-img" style={{ marginLeft: 20 }} />
               </Link>
               <Link to="/notification" className="nav-link">

@@ -54,6 +54,23 @@ const Login = () => {
         if (data.user) {
           localStorage.setItem("user", JSON.stringify(data.user));
         }
+        // ⭐️ 사용자 정보 따로 요청해서 저장 (account API)
+        const accountRes = await fetch(
+          "http://localhost:9090/api/users/account",
+          {
+            headers: {
+              Authorization: `Bearer ${data.token}`,
+            },
+          }
+        );
+        const accountData = await accountRes.json();
+        console.log("⭐️ 사용자 account 정보:", accountData);
+       
+        if (accountData.user) {
+          localStorage.setItem("user", JSON.stringify(accountData.user));
+        } else {
+          console.warn("⚠️ account API에서 user 정보 없음");
+        }
 
         toast.success(`Welcome back, ${data.role.toLowerCase()}!`);
 
