@@ -7,9 +7,12 @@ import message from "../assets/message.png";
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
-
   const token =
     localStorage.getItem("token") || localStorage.getItem("accessToken");
+
+  // ✅ 사용자 역할 가져오기
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userRole = user?.role || "UNKNOWN";
 
   useEffect(() => {
     axios
@@ -25,7 +28,6 @@ const NotificationPage = () => {
       });
   }, []);
 
-  // ✅ 알림 삭제 함수
   const handleDelete = (id) => {
     axios
       .delete(`http://localhost:9090/api/notifications/${id}`, {
@@ -33,7 +35,6 @@ const NotificationPage = () => {
       })
       .then((res) => {
         console.log(`✅ 알림 ${id} 삭제됨`);
-        // 삭제된 알림을 UI에서 제거
         setNotifications((prev) => prev.filter((n) => n.id !== id));
       })
       .catch((err) => {
@@ -47,13 +48,34 @@ const NotificationPage = () => {
         <p className="title">Notifications</p>
         <div className="container">
           {notifications.map((n) => {
-            const bookingRefMatch = n.body.match(/Booking Reference:\s(\w+)/);
-            const bookingRef = bookingRefMatch ? bookingRefMatch[1] : "Unknown";
+            let messageText = "";
+            let bookingRef = "Unknown";
 
-            const messageMatch = n.body.match(
-              /You have a new booking request from .*? for your service '.*?'./
-            );
-            const messageText = messageMatch ? messageMatch[0] : "";
+            if (userRole === "SERVICE_PROVIDER") {
+              const refMatch = n.body?.match(
+                /(?:Ref:|Booking Reference:)\s*([A-Z0-9]+)/i
+              );
+              if (refMatch) {
+                bookingRef = refMatch[1];
+              }
+              const match = n.body.match(
+                /You have a new booking request from .*? for your service '.*?'./
+              );
+              messageText = match ? match[0] : n.subject;
+            } else if (userRole === "CUSTOMER") {
+              const refMatch = n.body?.match(
+                /(?:Ref:|Booking Reference:)\s*([A-Z0-9]+)/i
+              );
+              if (refMatch) {
+                bookingRef = refMatch[1];
+              }
+              const match = n.body.match(
+                /Your booking request for '.*?' has been accepted by the provider\..*?$/
+              );
+              messageText = match ? match[0] : n.subject;
+            } else {
+              messageText = n.subject;
+            }
 
             return (
               <div key={n.id} className="item">
@@ -71,10 +93,7 @@ const NotificationPage = () => {
                   <br />
                   {messageText}
                 </p>
-                <button
-                  className="greenbtn"
-                  onClick={() => handleDelete(n.id)} // ✅ 클릭 시 삭제
-                >
+                <button className="greenbtn" onClick={() => handleDelete(n.id)}>
                   Check
                 </button>
               </div>
