@@ -4,12 +4,20 @@ import * as S from "../style";
 import { useNavigate, useParams } from "react-router-dom";
 import providers from "./data/providers";
 import SwiperComponent from "./SwiperComponent";
-import { Form, Input, Button, DatePicker, TimePicker, Row, Col, Modal, Select } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  DatePicker,
+  TimePicker,
+  Row,
+  Col,
+  Modal,
+  Select,
+} from "antd";
 import location from "../assets/location.png";
 import FormItem from "antd/es/form/FormItem";
 import moment from "moment";
-
-
 
 const ProfileStyle = styled.div`
 .hehe {
@@ -267,7 +275,7 @@ const ProviderProfile = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = React.useState(false);
 
@@ -291,28 +299,32 @@ const ProviderProfile = () => {
 
   const fetchReviews = async () => {
     try {
-      const token = localStorage.getItem('token'); // get auth token if needed
-      const response = await fetch(`http://localhost:9090/api/reviews/provider/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const token = localStorage.getItem("token"); // get auth token if needed
+      const response = await fetch(
+        `http://localhost:9090/api/reviews/provider/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
       setReviews(data.reviews || []);
     } catch (error) {
-      console.error('Reviews fetch error:', error);
+      console.error("Reviews fetch error:", error);
     }
   };
-
 
   useEffect(() => {
     const fetchProviderData = async () => {
       try {
-        const response = await fetch(`http://localhost:9090/api/users/service-providers/${id}`);
+        const response = await fetch(
+          `http://localhost:9090/api/users/service-providers/${id}`
+        );
         if (!response.ok) throw new Error("Failed to fetch provider data");
         const data = await response.json();
         setProvider(data.user);
@@ -325,7 +337,9 @@ const ProviderProfile = () => {
 
     const fetchServices = async () => {
       try {
-        const response = await fetch(`http://localhost:9090/api/services/provider/${id}`);
+        const response = await fetch(
+          `http://localhost:9090/api/services/provider/${id}`
+        );
         if (!response.ok) throw new Error("Failed to fetch services");
         const data = await response.json();
         setServices(data.services || []);
@@ -339,7 +353,6 @@ const ProviderProfile = () => {
     fetchReviews();
   }, [id]);
 
-
   if (loading) {
     return <div className="provider-profile">Loading...</div>;
   }
@@ -347,7 +360,7 @@ const ProviderProfile = () => {
   if (error) {
     return <div className="provider-profile error">Error: {error}</div>;
   }
-  
+
   const service = provider.serviceProviderProfile || {};
 
   const averageRating =
@@ -357,7 +370,7 @@ const ProviderProfile = () => {
 
   const onFinish = async (values) => {
     const serviceId = values.serviceId;
-    const selected = services.find(s => s.id === serviceId);
+    const selected = services.find((s) => s.id === serviceId);
 
     if (!selected) {
       alert("Please select a service before submitting.");
@@ -368,26 +381,24 @@ const ProviderProfile = () => {
     const requestData = {
       description: values.description,
       location: values.location,
-      preferredDate: values.preferredDate,    // if you have these fields
+      preferredDate: values.preferredDate, // if you have these fields
       preferredTime: extractTime(values.preferredTime),
       status: "PENDING",
       service: {
-        id: selected.id
-      }
+        id: selected.id,
+      },
     };
-
 
     console.log("Request Data to Submit:", requestData);
 
     try {
       const token = localStorage.getItem("token");
-      
 
       const response = await fetch("http://localhost:9090/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       });
@@ -399,7 +410,7 @@ const ProviderProfile = () => {
 
       const result = await response.json();
       console.log("Booking successful:", result);
-      
+
       alert("Booking submitted successfully and is pending provider approval.");
 
       // Optional: reset form and state
@@ -424,7 +435,7 @@ const ProviderProfile = () => {
       const response = await fetch(`http://localhost:9090/api/reviews`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -454,8 +465,6 @@ const ProviderProfile = () => {
     }
   };
 
-
-
   const scrollToReviews = () => {
     reviewRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -472,13 +481,18 @@ const ProviderProfile = () => {
             {/*2*/}
             <div className="slice">
               <img className="photo" src="/cover-photo.jpg" alt="service photo 2" />
+
             </div>
           </SwiperComponent>
         </div>
 
         <h2 className="serviceNameRating" style={{ marginBottom: "10px" }}>
           {provider.serviceProviderProfile.serviceName}&nbsp;
-          <img src="/star.png" alt="Star Icon" className="galleryItemRatingsIcon" />
+          <img
+            src="/star.png"
+            alt="Star Icon"
+            className="galleryItemRatingsIcon"
+          />
           &nbsp;&nbsp;
           {averageRating}
         </h2>
@@ -486,8 +500,13 @@ const ProviderProfile = () => {
         <div className="serviceTitleLocationDescription">
           <h3>
             {service.serviceCategory}
-            <br /> 
-            <img src={location} height="16px" width="15px" alt="Location Icon" />
+            <br />
+            <img
+              src={location}
+              height="16px"
+              width="15px"
+              alt="Location Icon"
+            />
             &nbsp;
             {service.location}
           </h3>
@@ -498,7 +517,11 @@ const ProviderProfile = () => {
           <br />
           <div className="content">
             <h4 style={{ display: "inline" }}>
-              <img src="/star.png" alt="Star Icon" className="galleryItemRatingsIcon" />{" "}
+              <img
+                src="/star.png"
+                alt="Star Icon"
+                className="galleryItemRatingsIcon"
+              />{" "}
               {averageRating} / 5.0 <span>&nbsp;&nbsp;&nbsp;</span>"
               {reviews[0]?.comment}" - {reviews[0]?.name}
             </h4>
@@ -523,7 +546,9 @@ const ProviderProfile = () => {
               <Form.Item
                 label="Select Service"
                 name="serviceId"
-                rules={[{ required: true, message: "Please select a service." }]}
+                rules={[
+                  { required: true, message: "Please select a service." },
+                ]}
               >
                 <Select
                   placeholder="Select a service"
@@ -557,7 +582,9 @@ const ProviderProfile = () => {
               <Form.Item
                 label="Location"
                 name="location"
-                rules={[{ required: true, message: "Please enter a location!" }]}
+                rules={[
+                  { required: true, message: "Please enter a location!" },
+                ]}
                 className="serviceRequestHeaders"
               >
                 <Input placeholder="Your location" />
@@ -568,17 +595,26 @@ const ProviderProfile = () => {
                   <Form.Item
                     label="Preferred Date"
                     name="preferredDate"
-                    rules={[{ required: true, message: "Please select a date!" }]}
+                    rules={[
+                      { required: true, message: "Please select a date!" },
+                    ]}
                     className="serviceRequestHeaders"
                   >
-                    <DatePicker style={{ width: "100%" }} disabledDate={(current) => current && current < moment().startOf('day')} />
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      disabledDate={(current) =>
+                        current && current < moment().startOf("day")
+                      }
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item
                     label="Preferred Time"
                     name="preferredTime"
-                    rules={[{ required: true, message: "Please select a time!" }]}
+                    rules={[
+                      { required: true, message: "Please select a time!" },
+                    ]}
                     className="serviceRequestHeaders"
                   >
                     <TimePicker style={{ width: "100%" }} format="HH:mm" />
@@ -618,7 +654,9 @@ const ProviderProfile = () => {
         <div className="contact">
           <img className="profpic" src="/profile.jpg" alt="Profile" />
           <div className="info">
-            <p className="name">{provider.firstName} {provider.lastName}</p>
+            <p className="name">
+              {provider.firstName} {provider.lastName}
+            </p>
             <p className="contacts">Phone: {provider.phoneNumber}</p>
             <p className="contacts">Email: {provider.email}</p>
           </div>
@@ -627,14 +665,20 @@ const ProviderProfile = () => {
         <div ref={reviewRef} className="review-section">
           <h3>
             All Reviews (
-            <img src="/star.png" alt="Star Icon" className="galleryItemRatingsIcon" />
-            {reviews.length > 0 ? averageRating.toFixed(1) : 'N/A'})
+            <img
+              src="/star.png"
+              alt="Star Icon"
+              className="galleryItemRatingsIcon"
+            />
+            {reviews.length > 0 ? averageRating.toFixed(1) : "N/A"})
           </h3>
 
           {reviews.length > 0 ? (
             reviews.map((r) => (
               <div key={r.id} className="review-card">
-                <h4>{r.reviewerInfo.firstName} {r.reviewerInfo.lastName}</h4>
+                <h4>
+                  {r.reviewerInfo.firstName} {r.reviewerInfo.lastName}
+                </h4>
                 <p>Service Name: {r.serviceNameReviewed}</p>
                 <p>Rating: {r.rating}</p>
                 <div>
@@ -686,7 +730,6 @@ const ProviderProfile = () => {
 
             <button type="submit">Add Review</button>
           </form>
-
         </div>
       </div>
     </ProfileStyle>

@@ -8,6 +8,7 @@ const ChatRoomList = ({
   token,
   selectedRoomId,
   userRole,
+  refreshTrigger,
 }) => {
   const [rooms, setRooms] = useState([]);
 
@@ -22,7 +23,7 @@ const ChatRoomList = ({
         setRooms(res.data.chatRooms ?? res.data);
       })
       .catch((err) => console.error("채팅방 불러오기 실패", err));
-  }, [token]);
+  }, [token, refreshTrigger]);
 
   return (
     <div

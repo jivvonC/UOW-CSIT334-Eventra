@@ -15,6 +15,7 @@ const ChatPage = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [messages, setMessages] = useState([]);
   const [userRole, setUserRole] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // ✅ 추가
   const token =
     localStorage.getItem("token") || localStorage.getItem("accessToken");
   const clientRef = useRef(null);
@@ -179,6 +180,9 @@ const ChatPage = () => {
         // res.data.chatRoom 에 새로 만들거나 기존 방 정보가 들어있음
         const room = res.data.chatRoom || res.data;
         setSelectedRoom(room);
+
+        // ✅ 새로운 채팅방 생성 후 트리거 증가 → 방 목록 useEffect 다시 실행
+        setRefreshTrigger((prev) => prev + 1);
       })
       .catch((err) => console.error("채팅방 생성 실패", err));
   };
@@ -197,6 +201,7 @@ const ChatPage = () => {
         token={token}
         selectedRoomId={selectedRoom?.id} // ✅ 현재 선택된 방 ID 넘김
         userRole={userRole}
+        refreshTrigger={refreshTrigger} // ✅ 전달
       />
 
       {/* 3) 우측: 선택된 방의 메시지 + 입력창 */}
