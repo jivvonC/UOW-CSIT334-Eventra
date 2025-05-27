@@ -270,6 +270,8 @@ const AccountPage = () => {
       .catch((err) => console.error(err));
   }, [role]);
 
+  const providerId = profile?.id;
+
   async function acceptBooking(bookingReference) {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("No token found");
@@ -382,7 +384,7 @@ const AccountPage = () => {
       },
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch dashboard summary");
+        if (!res.ok) throw new Error("There are not enough data to show to dashboard. Please a book a service first!");
         return res.json();
       })
       .then((data) => {
@@ -917,7 +919,23 @@ const AccountPage = () => {
 
     if (selectedKey === "4") {
       if (loading) return <div>Loading report...</div>;
-      if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
+      if (error) {
+        return (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "60vh", // or "100vh" to center in full screen
+              fontSize: "20px",
+              color: "red",
+              textAlign: "center",
+            }}
+          >
+            {error}
+          </div>
+        );
+      }
       if (!summary) return <div>No data available</div>;
       console.log("Summary data:", summary);
       
@@ -1047,7 +1065,12 @@ const AccountPage = () => {
               </Card>
             </Col>
             <Col span={6}>
-              <Card variant="borderless">
+              <Card
+                variant="borderless"
+                hoverable
+                onClick={() => navigate(`/providerprofile/${providerId}`)}
+                style={{ cursor: "pointer" }}
+              >
                 <Statistic
                   title="Total reviews"
                   value={summary.totalReviews}
