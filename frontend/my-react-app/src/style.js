@@ -159,6 +159,8 @@ export const StyledWrapper2 = styled.div`
     text-align: left;
     padding-right: 32%;
     line-height: 0.2;
+    overflow-y: auto;         /* ✅ 스크롤 추가 */
+    height: 100%;
   }
 
   .form-title {
@@ -262,7 +264,7 @@ export const StyledWrapper2 = styled.div`
   top: 45%;
   right:-10%;
   }
-  }`;
+ }`;
 
 export const SignUpCard = styled.div`
   .card {
