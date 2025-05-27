@@ -44,6 +44,7 @@ const AccountPage = () => {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("1");
 
   const [newService, setNewService] = useState({
     name: "",
@@ -354,7 +355,7 @@ const AccountPage = () => {
         updatedBooking = await updateBookingStatusByEndpoint(bookingReference, status);
       }
 
-      setBookings((prev) =>
+      setProviderBookings((prev) =>
         prev.map((b) =>
           b.bookingReference === bookingReference ? updatedBooking : b
         )
@@ -363,6 +364,7 @@ const AccountPage = () => {
       alert("Failed to update booking status.");
     }
   };
+
 
   //Report Dashboard
   useEffect(() => {
@@ -449,10 +451,35 @@ const AccountPage = () => {
     }
   };
 
-
-
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
+  };
+
+  const onTabChange = (key) => {
+    setActiveTab(key);
+
+    if (key === "2" && role === "service_provider") {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      setLoadingProviderBookings(true);
+      fetch("http://localhost:9090/api/bookings/my-bookings/provider", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch provider bookings");
+          return res.json();
+        })
+        .then((data) => {
+          setProviderBookings(data.bookings || []);
+          setProviderBookingError(null);
+        })
+        .catch((err) => setProviderBookingError(err.message))
+        .finally(() => setLoadingProviderBookings(false));
+    }
   };
 
   const renderSider = () => (
@@ -534,29 +561,6 @@ const AccountPage = () => {
                 <Form.Item label="ABN" name="abn">
                   <Input disabled={!isEditing} />
                 </Form.Item>
-
-                {/* Commented out Upload fields (left column) */}
-                {/* <Form.Item
-                  name="photo1"
-                  label="Photo1"
-                  valuePropName="fileList"
-                  getValueFromEvent={normFile}
-                >
-                  <Upload name="logo" action="/upload.do" listType="picture">
-                    <Button icon={<UploadOutlined />}>Click to upload</Button>
-                  </Upload>
-                </Form.Item> */}
-
-                {/* <Form.Item
-                  name="photo3"
-                  label="Photo3"
-                  valuePropName="fileList"
-                  getValueFromEvent={normFile}
-                >
-                  <Upload name="logo" action="/upload.do" listType="picture">
-                    <Button icon={<UploadOutlined />}>Click to upload</Button>
-                  </Upload>
-                </Form.Item> */}
               </Col>
 
               <Col span={12}>
@@ -617,29 +621,6 @@ const AccountPage = () => {
                     </Button>
                   </Upload>
                 </Form.Item>
-
-                {/* Commented out Upload fields (right column) */}
-                {/* <Form.Item
-                  name="photo2"
-                  label="Photo2"
-                  valuePropName="fileList"
-                  getValueFromEvent={normFile}
-                >
-                  <Upload name="logo" action="/upload.do" listType="picture">
-                    <Button icon={<UploadOutlined />}>Click to upload</Button>
-                  </Upload>
-                </Form.Item> */}
-
-                {/* <Form.Item
-                  name="photo4"
-                  label="Photo4"
-                  valuePropName="fileList"
-                  getValueFromEvent={normFile}
-                >
-                  <Upload name="logo" action="/upload.do" listType="picture">
-                    <Button icon={<UploadOutlined />}>Click to upload</Button>
-                  </Upload>
-                </Form.Item> */}
               </Col>
             </Row>
 
@@ -679,7 +660,7 @@ const AccountPage = () => {
           {providerBookingError && <p style={{ color: "red" }}>{providerBookingError}</p>}
           {!loadingProviderBookings && providerBookings.length === 0 && <p>No bookings found.</p>}
 
-          <Tabs defaultActiveKey="1">
+          <Tabs activeKey={activeTab} onChange={onTabChange}>
             <TabPane tab="New Bookings" key="1"> {/* PENDING */}
               {filterBookingsByStatus("PENDING").map((booking) => (
                 <Card
@@ -709,6 +690,7 @@ const AccountPage = () => {
                   }
                 >
                   <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Booking Description:</strong> {booking.description}</p>
                   <p><strong>Date:</strong> {booking.preferredDate}</p>
                   <p><strong>Time:</strong> {booking.preferredTime}</p>
                   <p><strong>Status:</strong> {booking.status}</p>
@@ -724,21 +706,9 @@ const AccountPage = () => {
                   key={booking.id}
                   title={`Booking by ${booking.user?.firstName || "Unknown"}`}
                   style={{ marginBottom: 10 }}
-                  extra={
-                    <>
-                      {/* No Accept button here as it's already accepted */}
-                      <Button
-                        danger
-                        onClick={() =>
-                          handleChangeBookingStatus(booking.bookingReference, "REJECTED")
-                        }
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  }
                 >
                   <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Booking Description:</strong> {booking.description}</p>
                   <p><strong>Date:</strong> {booking.preferredDate}</p>
                   <p><strong>Time:</strong> {booking.preferredTime}</p>
                   <p><strong>Status:</strong> {booking.status}</p>
@@ -769,6 +739,7 @@ const AccountPage = () => {
                   }
                 >
                   <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Booking Description:</strong> {booking.description}</p>
                   <p><strong>Date:</strong> {booking.preferredDate}</p>
                   <p><strong>Time:</strong> {booking.preferredTime}</p>
                   <p><strong>Status:</strong> {booking.status}</p>
@@ -787,6 +758,7 @@ const AccountPage = () => {
                   extra={null}
                 >
                   <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Booking Description:</strong> {booking.description}</p>
                   <p><strong>Date:</strong> {booking.preferredDate}</p>
                   <p><strong>Time:</strong> {booking.preferredTime}</p>
                   <p><strong>Status:</strong> {booking.status}</p>
@@ -805,6 +777,7 @@ const AccountPage = () => {
                   extra={null}
                 >
                   <p><strong>Service:</strong> {booking.service?.name || "No service name"}</p>
+                  <p><strong>Booking Description:</strong> {booking.description}</p>
                   <p><strong>Date:</strong> {booking.preferredDate}</p>
                   <p><strong>Time:</strong> {booking.preferredTime}</p>
                   <p><strong>Status:</strong> {booking.status}</p>
@@ -1140,7 +1113,7 @@ const AccountPage = () => {
               <p><strong>Time:</strong> {booking.preferredTime}</p>
 
               {/* Example status update buttons */}
-              {booking.status === "CONFIRMED" && (
+              {booking.status === "PENDING" && (
                 <Button
                   danger
                   onClick={() => handleChangeBookingStatus(booking.id, "CANCELLED")}

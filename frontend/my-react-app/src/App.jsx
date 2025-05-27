@@ -12,6 +12,7 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState("All Services");
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [providers, setProviders] = useState([]);
+  const [selectedCategoryEnum, setSelectedCategoryEnum] = useState("");
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -58,31 +59,32 @@ function App() {
     navigate(`/providerprofile/${id}`);
   };
 
-  const handleCategoryClick = (categoryName) => {
-    setSelectedCategory(categoryName);
-    navigate(`/?category=${encodeURIComponent(categoryName)}`);
+  const handleCategoryClick = (categoryEnum) => {
+    setSelectedCategoryEnum(categoryEnum);
+    navigate(`/?category=${encodeURIComponent(categoryEnum)}`);
   };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const categoryFromURL = params.get("category");
     if (categoryFromURL) {
-      setSelectedCategory(categoryFromURL);
+      setSelectedCategoryEnum(categoryFromURL);
+    } else {
+      setSelectedCategoryEnum(""); // default to All Services
     }
   }, [location.search]);
 
   const filteredServices = providers.filter((item) => {
-    const selected = selectedCategory?.toLowerCase();
-    const category = item.category?.toLowerCase();
-
-    const matchesCategory =
-      !selectedCategory ||
-      selectedCategory === "All Services" ||
-      category === selected;
-
-    const matchesLocation = !selectedLocation || item.location === selectedLocation;
-    return matchesCategory && matchesLocation;
+    // If empty string or "All Services" selected, show all
+    if (!selectedCategoryEnum || selectedCategoryEnum === "") {
+      return true;
+    }
+    return item.category === selectedCategoryEnum;
   });
+
+  const selectedCategoryName =
+    categories.find((cat) => cat.enum === selectedCategoryEnum)?.name || "All Services";
+
 
   return (
     <div className="pageBackgroundColor">
@@ -96,8 +98,8 @@ function App() {
             {categories.map((category, index) => (
               <div
                 key={index}
-                className={`categoryCard ${selectedCategory === category.name ? "active" : ""}`}
-                onClick={() => handleCategoryClick(category.name)}
+                className={`categoryCard ${selectedCategoryEnum === category.enum ? "active" : ""}`}
+                onClick={() => handleCategoryClick(category.enum)}
               >
                 <img src={category.icon} alt={category.name} className="categoryIcon" />
                 <p className="categoryLabel">{category.name}</p>
@@ -113,7 +115,7 @@ function App() {
         <div>
           {selectedCategory && (
             <p className="resultTitle">
-              <strong>{selectedCategory}</strong> category:
+              <strong>{selectedCategoryName}</strong> category:
             </p>
           )}
           <div

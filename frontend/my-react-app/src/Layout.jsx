@@ -1,57 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import NavBar from './components/NavBar';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 const Layout = () => {
-    const [selectedLocation, setSelectedLocation] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const navigate = useNavigate();
-    
-    const handleSearch = (value) => {
-        const trimmedValue = value.trim();
-        setSearchQuery(trimmedValue); // Update state
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
 
-        const hasQuery = !!trimmedValue;
-        const hasLocation = selectedLocation !== null;
+  const handleSearch = (query) => {
+    const trimmedQuery = query.trim();
+    setSearchQuery(trimmedQuery);
 
-        if (!hasQuery && !hasLocation) {
-            navigate(`/search`); // Show home
-        } else {
-            let queryParams = [];
-            if (hasQuery) queryParams.push(`q=${encodeURIComponent(trimmedValue)}`);
-            if (hasLocation) queryParams.push(`loc=${encodeURIComponent(selectedLocation)}`);
-            navigate(`/search${queryParams.length ? `?${queryParams.join("&")}` : ""}`);
-        }
-    };
+    if (trimmedQuery === '') {
+      navigate(`/search`);
+    } else {
+      navigate(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+    }
+  };
 
-    useEffect(() => {
-        const hasQuery = !!searchQuery.trim();
-        const hasLocation = selectedLocation !== null;
+  // Optional: Reset state when returning home
+  React.useEffect(() => {
+    if (location.pathname === '/' && !location.search) {
+      setSearchQuery('');
+    }
+  }, [location]);
 
-        if (!hasQuery && !hasLocation) {
-            navigate(`/`);
-            return;
-        }
-
-        let queryParams = [];
-        if (hasQuery) queryParams.push(`q=${encodeURIComponent(searchQuery)}`);
-        if (hasLocation) queryParams.push(`loc=${encodeURIComponent(selectedLocation)}`);
-
-        navigate(`/search${queryParams.length ? `?${queryParams.join("&")}` : ""}`);
-    }, [selectedLocation]);
-
-    return (
-        <>
-            <NavBar 
-                onSearch={handleSearch}
-                selectedLocation={selectedLocation}
-                setSelectedLocation={setSelectedLocation}
-            />
-            <main className='p-4'>
-                <Outlet />
-            </main>
-        </>
-    );
+  return (
+    <>
+      <NavBar onSearch={handleSearch} />
+      <main className="p-4">
+        <Outlet />
+      </main>
+    </>
+  );
 };
 
 export default Layout;

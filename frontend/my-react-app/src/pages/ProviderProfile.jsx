@@ -476,19 +476,12 @@ const ProviderProfile = () => {
           <SwiperComponent>
             {/*1*/}
             <div className="slice">
-              <img
-                className="photo"
-                src="/cover-photo.jpg"
-                alt="service photo 1"
-              />
+              <img className="photo" src="/cover-photo.jpg" alt="service photo 1" />
             </div>
             {/*2*/}
             <div className="slice">
-              <img
-                className="photo"
-                src="/cover-photo.jpg"
-                alt="service photo 2"
-              />
+              <img className="photo" src="/cover-photo.jpg" alt="service photo 2" />
+
             </div>
           </SwiperComponent>
         </div>
