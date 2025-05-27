@@ -494,7 +494,7 @@ const ProviderProfile = () => {
             className="galleryItemRatingsIcon"
           />
           &nbsp;&nbsp;
-          {averageRating}
+          {averageRating.toFixed(1)}
         </h2>
 
         <div className="serviceTitleLocationDescription">
@@ -522,7 +522,7 @@ const ProviderProfile = () => {
                 alt="Star Icon"
                 className="galleryItemRatingsIcon"
               />{" "}
-              {averageRating} / 5.0 <span>&nbsp;&nbsp;&nbsp;</span>"
+              {averageRating.toFixed(1)} / 5.0 <span>&nbsp;&nbsp;&nbsp;</span>"
               {reviews[0]?.comment}" - {reviews[0]?.name}
             </h4>
             <button onClick={scrollToReviews} className="see-more-btn">
