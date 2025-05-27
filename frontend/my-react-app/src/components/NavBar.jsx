@@ -1,63 +1,32 @@
-import { React, useState } from "react";
-import { Input, Select } from "antd";
+import React, { useState } from "react";
+import { Input } from "antd";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 import "./NavBar.css";
 import { Link } from "react-router-dom";
 
 const { Search } = Input;
-const { Option } = Select;
 
-const locations = [
-  "All Locations",
-  "Wollongong",
-  "North Wollongong",
-  "Keiraville",
-  "Gwynneville",
-  "Figtree",
-  "Coniston",
-  "Unanderra",
-  "Corrimal",
-  "Fairy Meadow",
-  "Shellharbour",
-  "Kiama",
-  "Nowra",
-  "Dapto",
-  "Albion Park",
-  "Port Kembla",
-  "Bellambi",
-  "Towradgi",
-  "Sydney CBD",
-  "Parramatta",
-  "Bondi",
-  "Manly",
-  "Chatswood",
-  "Penrith",
-  "Hornsby",
-  "Liverpool",
-  "Blacktown",
-  "Campbelltown",
-  "Ryde",
-  "Burwood",
-  "Sutherland",
-  "Cronulla",
-  "St Leonards",
-  "North Sydney",
-  "Newtown",
-  "Redfern",
-];
-
-const sortedLocations = [
-  "All Locations",
-  ...locations.filter((loc) => loc !== "All Locations").sort(),
-];
-
-const NavBar = ({ onSearch, selectedLocation, setSelectedLocation }) => {
+const NavBar = ({ onSearch }) => {
   const { isLoggedIn } = useAuth();
   const [searchValue, setSearchValue] = useState("");
 
   const handleChange = (e) => {
     const value = e.target.value;
     setSearchValue(value);
+  };
+
+  const handleSearch = async (value) => {
+    try {
+      setSearchValue(value);
+      const response = await axios.get(`http://localhost:9090/api/users/service-providers/search`, {
+        params: { name: value }
+      });
+      console.log("Search results:", response.data);
+      onSearch(value); // trigger navigation
+    } catch (error) {
+      console.error("❌ Search error:", error);
+    }
   };
 
   return (
@@ -73,42 +42,17 @@ const NavBar = ({ onSearch, selectedLocation, setSelectedLocation }) => {
               allowClear
               value={searchValue}
               onChange={handleChange}
-              onSearch={(value) => {
-                setSearchValue(value);
-                onSearch(value);
-              }}
+              onSearch={handleSearch}
               style={{ width: 350 }}
             />
-
-            <Select
-              showSearch
-              placeholder="Select location"
-              optionFilterProp="children"
-              style={{ width: 200 }}
-              value={selectedLocation}
-              onChange={setSelectedLocation}
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {sortedLocations.map((loc) => (
-                <Option key={loc} value={loc}>
-                  {loc}
-                </Option>
-              ))}
-            </Select>
           </div>
         </div>
 
         <div className="navbar-right">
           {!isLoggedIn ? (
             <>
-              <Link to="/login" className="navLinkText">
-                Log in
-              </Link>
-              <Link to="/signupselect" className="navLinkText">
-                Sign up
-              </Link>
+              <Link to="/login" className="navLinkText">Log in</Link>
+              <Link to="/signupselect" className="navLinkText">Sign up</Link>
             </>
           ) : (
             <>

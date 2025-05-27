@@ -74,7 +74,9 @@ const Login = () => {
 
         toast.success(`Welcome back, ${data.role.toLowerCase()}!`);
 
-        if (data.role === "CUSTOMER" || data.role === "SERVICE_PROVIDER") {
+        if (data.role === "CUSTOMER") {
+          navigate("/");
+        } else if (data.role === "SERVICE_PROVIDER") {
           navigate("/account");
         } else if (data.role === "ADMIN") {
           navigate("/admin");
