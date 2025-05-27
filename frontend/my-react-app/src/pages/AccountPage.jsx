@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Layout, Menu, Tabs, Card, Button, Typography, Form, Input, InputNumber, Select, Upload, Space, message, Row, Col, Statistic } from "antd";
 import {
   UserOutlined,
-  MessageOutlined,
-  AppstoreOutlined,
-  ProfileOutlined,
+  ShopOutlined,
+  InboxOutlined,
+  AuditOutlined,
   UploadOutlined,
-  PlusOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -414,13 +413,13 @@ const AccountPage = () => {
   const menuItems = {
     service_provider: [
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
-      { key: "2", icon: <AppstoreOutlined />, label: "My Requests" },
-      { key: "3", icon: <ProfileOutlined />, label: "My Services" },
-      { key: "4", icon: <ProfileOutlined />, label: "Analysis Report" },
+      { key: "2", icon: <InboxOutlined />, label: "My Requests" },
+      { key: "3", icon: <ShopOutlined />, label: "My Services" },
+      { key: "4", icon: <AuditOutlined />, label: "Analysis Report" },
     ],
     customer: [
       { key: "1", icon: <UserOutlined />, label: "Profile Settings" },
-      { key: "2", icon: <ProfileOutlined />, label: "My Bookings" },
+      { key: "2", icon: <InboxOutlined />, label: "My Bookings" },
     ],
   };
 
