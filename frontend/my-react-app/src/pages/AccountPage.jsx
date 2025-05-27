@@ -384,7 +384,7 @@ const AccountPage = () => {
       },
     })
       .then((res) => {
-        if (!res.ok) throw new Error("There are not enough data to show to dashboard. Please a book a service first!");
+        if (!res.ok) throw new Error("There are not enough data to show to dashboard. Wait for your first booking!");
         return res.json();
       })
       .then((data) => {

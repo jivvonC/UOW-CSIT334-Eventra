@@ -10,8 +10,8 @@ const AdminHomePage = () => {
     const { setIsLoggedIn } = useAuth();
     const navigate = useNavigate();
 
-    const customerCount = 20;
-    const providerCount = 12;
+    const customerCount = 100;
+    const providerCount = 100;
 
     const handleLogout = () => {
         setIsLoggedIn(false);

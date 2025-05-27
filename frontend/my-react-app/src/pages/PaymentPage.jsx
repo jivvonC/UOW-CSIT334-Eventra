@@ -77,8 +77,8 @@ const PaymentPage = () => {
       <h1>Card Payment</h1>
       <Card title="Payment Information">
         <div className="paymentInfo">
-          <p className="item">{item}</p>
-          <h3 className="price">${price} AUD</h3>
+          <p className="item">Service Provider Subscription - 1 Month</p>
+          <h3 className="price">$20 AUD</h3>
         </div>
         <Input
           placeholder="Card Number"

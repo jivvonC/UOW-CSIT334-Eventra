@@ -73,7 +73,7 @@ const ChatRoomList = ({
             </li>
           );
         })}
-        {rooms.length === 0 && <li>진행 중인 채팅방이 없습니다.</li>}
+        {rooms.length === 0 && <li>No open chat rooms</li>}
       </ul>
     </div>
   );
