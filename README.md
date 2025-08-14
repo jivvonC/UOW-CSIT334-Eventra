@@ -1,4 +1,5 @@
 <h1>Eventra - Event Service Booking Platform</h1>
+<img src="screenshot.png" width="800" height="400">
 <h2>📄 Project Description</h2>
 <p><b>Eventra</b> is a full-stack event service booking platform that connects customers with various service providers.<br><br>
 <b>The application allows users to register, browse services, make bookings, communicate with providers, leave reviews, and manage payments.</b><br>
