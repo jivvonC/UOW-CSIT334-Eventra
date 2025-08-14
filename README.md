@@ -3,7 +3,8 @@
 <p><b>Eventra</b> is a full-stack event service booking platform that connects customers with various service providers.<br>
 <b>The application allows users to register, browse services, make bookings, communicate with providers, leave reviews, and manage payments.</b><br>
 Service providers can create and manage their profiles, list services, handle bookings, and monitor performance through an analytics dashboard.<br>
-The system includes <b>real-time chat</b> (WebSocket + STOMP), <b>in-app notifications</b>, <b>JWT-based authentication</b>, and a <b>layered Spring Boot architecture</b> for scalability and maintainability.<br>
+The system includes <b>real-time chat</b> (WebSocket + STOMP), <b>in-app notifications</b>, <b>JWT-based authentication</b>, and a <b>layered Spring Boot architecture</b> for scalability and maintainability.<br><br>
+This project was an assignment for CSIT334-Software Design in University of Wollongong, Australia
 <br>
 The frontend, built with <b>React, Vite, Ant Design, Tailwind CSS, and StompJS</b>, delivers a responsive and modern user experience.
 The backend, built with <b>Java 21 and Spring Boot</b>, uses a <b>MySQL</b> database with JPA/Hibernate and integrates a <b>simulated payment system</b>.</p>
