@@ -111,6 +111,7 @@ The backend, built with <b>Java 21 and Spring Boot</b>, uses a <b>MySQL</b> data
 <h2>🎥 Demonstration Video</h2>
 [![Video Label](http://img.youtube.com/vi/mSiXyM4GLss/1.jpg)](https://youtu.be/mSiXyM4GLss)
 
+
 ## 🚀 Setup & Installation
 
 Follow these steps to get the project running locally.
