@@ -109,8 +109,8 @@ The backend, built with <b>Java 21 and Spring Boot</b>, uses a <b>MySQL</b> data
 <li>Monitor platform activity</li>
 
 <h2>🎥 Demonstration Video</h2>
-[![Video Label](http://img.youtube.com/vi/mSiXyM4GLss/1.jpg)](https://youtu.be/mSiXyM4GLss)
 
+[![Video Label](http://img.youtube.com/vi/mSiXyM4GLss/1.jpg)](https://youtu.be/mSiXyM4GLss)
 
 ## 🚀 Setup & Installation
 
